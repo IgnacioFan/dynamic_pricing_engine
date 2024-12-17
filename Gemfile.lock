@@ -80,6 +80,7 @@ GEM
       msgpack (~> 1.2)
     brakeman (6.2.2)
       racc
+    bson (5.0.2)
     builder (3.3.0)
     concurrent-ruby (1.3.4)
     connection_pool (2.4.1)
@@ -118,6 +119,12 @@ GEM
     marcel (1.0.4)
     mini_mime (1.1.5)
     minitest (5.25.4)
+    mongo (2.21.0)
+      bson (>= 4.14.1, < 6.0.0)
+    mongoid (9.0.3)
+      activemodel (>= 5.1, < 8.1, != 7.0.0)
+      concurrent-ruby (>= 1.0.5, < 2.0)
+      mongo (>= 2.18.0, < 3.0.0)
     msgpack (1.7.5)
     net-imap (0.5.1)
       date
@@ -258,6 +265,7 @@ DEPENDENCIES
   brakeman
   debug
   factory_bot_rails (~> 6)
+  mongoid (~> 9)
   puma (>= 5.0)
   rails (~> 7.2.0)
   rspec (~> 3.13)
