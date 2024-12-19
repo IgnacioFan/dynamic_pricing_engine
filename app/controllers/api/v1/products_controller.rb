@@ -1,6 +1,6 @@
 module Api
   module V1
-    class ProductController < ActionController::API
+    class ProductsController < ActionController::API
       def index
         @products = Product.all
         render json: @products
@@ -8,7 +8,7 @@ module Api
 
       def show
         @product = Product.find_by(id: params[:id])
-        render json: @product
+        @dynamic_price = @product.price_logs.last
       end
     end
   end
