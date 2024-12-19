@@ -21,7 +21,10 @@ RSpec.describe ImportInventoryCsvService do
         product = Product.find_by(name: "Foo")
         expect(product.category).to eq("Category 1")
         expect(product.default_price).to eq(10)
+        expect(product.current_price).to eq(10)
+        expect(product.price_logs.size).to eq(1)
         expect(product.inventory).to eq("total_available" => 100, "total_reserved" => 0)
+        expect(product.inventory_logs.size).to eq(1)
       end
     end
 

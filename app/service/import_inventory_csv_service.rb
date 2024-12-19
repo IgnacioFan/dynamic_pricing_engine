@@ -19,23 +19,26 @@ class ImportInventoryCsvService < ApplicationService
   def handle_csv
     @csv.each_with_index do |row, index|
       next if index == 0 # skip headers
-      Product.create!(product_mapping(row))
+
+      product = Product.new(
+        name: row[0],
+        category: row[1]&.to_s,
+      )
+      product = product.update_price(
+        price: row[2]&.to_f,
+        source: :csv_imported,
+        auto_save: false
+      )
+      product = product.update_inventory(
+        change: row[3]&.to_i,
+        type: :csv_imported,
+        auto_save: false
+      )
+      product.save!
     end
   end
 
   def valid_header?
     @csv.first == HEADER
-  end
-
-  def product_mapping(row)
-    {
-      name: row[0],
-      category: row[1]&.to_s,
-      default_price: row[2]&.to_f,
-      inventory: {
-        total_available: row[3]&.to_i,
-        total_reserved: 0
-      }
-    }
   end
 end
