@@ -7,7 +7,7 @@ class Product
   field :default_price, type: BigDecimal
   field :current_price, type: BigDecimal, default: -> { default_price }
 
-  field :inventory, type: Hash, default: { total_available: 0, total_reserved: 0 }
+  field :inventory, type: Hash, default: { total_inventory: 0, total_reserved: 0 }
 
   embeds_many :price_logs, class_name: "PriceLog"
   embeds_many :inventory_logs, class_name: "InventoryLog"
@@ -42,7 +42,7 @@ class Product
     )
 
     if zero_inventory?(change)
-      self.inventory[:total_available] = change
+      self.inventory[:total_inventory] = change
     else
       self.inventory[:total_reserved] += change
     end
@@ -52,11 +52,11 @@ class Product
   end
 
   def zero_inventory?(change)
-    change > 0 && self.inventory[:total_available] == 0
+    change > 0 && self.inventory[:total_inventory] == 0
   end
 
   def available_inventory?(change)
-    (self.inventory[:total_reserved] + change <= self.inventory[:total_available]) &&
+    (self.inventory[:total_reserved] + change <= self.inventory[:total_inventory]) &&
     (self.inventory[:total_reserved] + change >= 0)
   end
 end

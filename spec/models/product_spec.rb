@@ -60,7 +60,7 @@ RSpec.describe Product, type: :model do
         it "returns a product" do
           product = subject
 
-          expect(product.inventory).to eq("total_available" => 100, "total_reserved" => 0)
+          expect(product.inventory).to eq("total_inventory" => 100, "total_reserved" => 0)
 
           latest_inventory_log = product.inventory_logs.last
           expect(latest_inventory_log.change).to eq(change)
@@ -75,7 +75,7 @@ RSpec.describe Product, type: :model do
     end
 
     context "when the total inventory is available" do
-      let(:product_params) { { name: "Foo", category: "Bar", inventory: { total_available: 10, total_reserved: 0 } } }
+      let(:product_params) { { name: "Foo", category: "Bar", inventory: { total_inventory: 10, total_reserved: 0 } } }
       let(:type) { "order_placed" }
 
       context "when change is positive" do
@@ -83,7 +83,7 @@ RSpec.describe Product, type: :model do
         it "returns a product" do
           product = subject
 
-          expect(product.inventory).to eq("total_available" => 10, "total_reserved" => 3)
+          expect(product.inventory).to eq("total_inventory" => 10, "total_reserved" => 3)
 
           latest_inventory_log = product.inventory_logs.first
           expect(latest_inventory_log.change).to eq(change)
@@ -98,7 +98,7 @@ RSpec.describe Product, type: :model do
     end
 
     context "when the change is over the total inventory" do
-      let(:product_params) { { name: "Foo", category: "Bar", inventory: { total_available: 10, total_reserved: 0 } } }
+      let(:product_params) { { name: "Foo", category: "Bar", inventory: { total_inventory: 10, total_reserved: 0 } } }
       let(:change) { 11 }
       let(:type) { "order_placed" }
 
