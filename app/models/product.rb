@@ -6,6 +6,10 @@ class Product
   field :category, type: String
   field :default_price, type: BigDecimal
   field :current_price, type: BigDecimal, default: -> { default_price }
+  # use price_unlocked_at to lock price in a short period of time to prevent background jobs from causing immediate price fluctuations
+  field :price_unlocked_at, type: DateTime
+  # use demand_score to calculate if product is high in demand
+  field :demand_score, type: Integer, default: 0
 
   field :inventory, type: Hash, default: { total_inventory: 0, total_reserved: 0 }
 
