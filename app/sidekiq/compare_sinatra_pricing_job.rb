@@ -4,15 +4,14 @@ class CompareSinatraPricingJob
 
   def perform(*args)
     response = fetch_product_prices
-
     case response.code
     when 200
       competitor_produts = format_products(response.parsed_response)
       CompareCompetitorPriceService.call(competitor_produts)
-    when 400...500
-      Rails.logger.info "#{response.code}, client error: #{response.body}"
     when 500...600
       raise StandardError, "#{response.code}, internal server error: #{response.body}"
+    else
+      Rails.logger.error "Unexpected response code #{response.code}: #{response.body}"
     end
   end
 

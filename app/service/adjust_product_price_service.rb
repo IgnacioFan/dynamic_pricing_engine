@@ -4,13 +4,12 @@ class AdjustProductPriceService < ApplicationService
   INVENTORY_DECR_RATE = 0.95.freeze
 
   def initialize(product_id)
-    @product = Product.find(product_id)
+    @product = find_product(product_id)
   end
 
   def call
-    return failure("Product price is locked now") unless price_unlocked?
+    return failure("Product not found") unless product
 
-    update_product_unlocked_time
     adjust_new_product_price
     success(@product)
   end
@@ -19,12 +18,10 @@ class AdjustProductPriceService < ApplicationService
 
   attr_accessor :product
 
-  def price_unlocked?
-    product.price_unlocked_at.nil? || Time.now.utc > product.price_unlocked_at
-  end
-
-  def update_product_unlocked_time
-    product.price_unlocked_at = Time.now.utc + 30.minutes
+  def find_product(id)
+    Product.find(id)
+  rescue Mongoid::Errors::DocumentNotFound
+    nil
   end
 
   def adjust_new_product_price
