@@ -1,5 +1,3 @@
 json.cart_id @cart.id
-json.cart_items @cart.cart_items do |item|
-  json.product_id item[:product_id]
-  json.quantity item[:quantity]
-end
+json.count   @cart.cart_items.size
+json.cart_items @cart.cart_items, partial: "api/v1/cart_items/cart_item", as: :item
