@@ -3,7 +3,6 @@ FactoryBot.define do
     name { "Foo" }
     category { "Test" }
     default_price { 100.0 }
-    current_price { 100.0 }
     demand_score { 0 }
 
     inventory {

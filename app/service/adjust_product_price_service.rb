@@ -1,7 +1,7 @@
 class AdjustProductPriceService < ApplicationService
-  DEMAND_INCR_RATE = 1.05.freeze
-  INVENTORY_INCR_RATE = 1.10.freeze
-  INVENTORY_DECR_RATE = 0.95.freeze
+  PRICE_INCR_RATE = 1.10.freeze
+  PRICE_DECR_RATE = 0.90.freeze
+  PRICE_BOTTOM_LINE = 0.60.freeze
 
   def initialize(product_id)
     @product = find_product(product_id)
@@ -10,8 +10,10 @@ class AdjustProductPriceService < ApplicationService
   def call
     return failure("Product not found") unless product
 
-    adjust_new_product_price
-    success(@product)
+    product.demand_price = adjust_demand_price
+    product.inventory_price = adjust_inventory_price if inventory_profitable_range
+    product.save!
+    success(product)
   end
 
   private
@@ -24,38 +26,29 @@ class AdjustProductPriceService < ApplicationService
     nil
   end
 
-  def adjust_new_product_price
-    if high_demand_product?
-      new_price = product.current_price * DEMAND_INCR_RATE
-      product.demand_score = 0
-      product.update_price(
-        price: new_price,
-        source: "high demand"
-      )
-    elsif low_inventory_product?
-      new_price = product.current_price * INVENTORY_INCR_RATE
-      product.update_price(
-        price: new_price,
-        source: "low inventory"
-      )
-    elsif high_inventory_product?
-      new_price = product.current_price * INVENTORY_DECR_RATE
-      product.update_price(
-        price: new_price,
-        source: "high inventory"
-      )
+  def adjust_demand_price
+    # increase the price if the product is frequently added to carts or purchased
+    if product.high_demand_product?
+      (product.demand_price || product.default_price) * PRICE_INCR_RATE
+    else
+      product.demand_price
     end
   end
 
-  def high_demand_product?
-    product.demand_score > 50
+  def adjust_inventory_price
+    # increase the price if the product's inventory level is low
+    if product.low_inventory_level?
+      (product.inventory_price || product.default_price) * PRICE_INCR_RATE
+    # decrease the price if the product's inventory level is high
+    elsif product.high_inventory_level?
+      (product.inventory_price || product.default_price) * PRICE_DECR_RATE
+    else
+      product.inventory_price
+    end
   end
 
-  def low_inventory_product?
-    (product.inventory[:total_inventory] - product.inventory[:total_reserved]).to_f / product.inventory[:total_inventory] < 0.2
-  end
-
-  def high_inventory_product?
-    (product.inventory[:total_inventory] - product.inventory[:total_reserved]).to_f / product.inventory[:total_inventory] > 0.8
+  def inventory_profitable_range
+    return true if product.inventory_price.nil?
+    product.inventory_price > (product.default_price * PRICE_BOTTOM_LINE)
   end
 end

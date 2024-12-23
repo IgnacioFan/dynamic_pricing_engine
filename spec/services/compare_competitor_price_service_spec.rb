@@ -1,50 +1,34 @@
 require "rails_helper"
 
 RSpec.describe CompareCompetitorPriceService do
-  let!(:product_1) { create(:product, name: "Foo", category: "Test", current_price: 100.0) }
-  let!(:product_2) { create(:product, name: "Bar", category: "Test", current_price: 200.0) }
+  let!(:product_1) { create(:product, name: "Foo", category: "Test", competitor_price: 100.0) }
+  let!(:product_2) { create(:product, name: "Bar", category: "Test", competitor_price: 200.0) }
 
   describe ".call" do
     subject { described_class.call(competitor_products) }
 
-    context "when competitor price is higher by more than 5%" do
+    context "when there are competitor products" do
       let(:competitor_products) {
         [
-          { name: "Foo", category: "Test", price: 110.0 }, # over 5%
-          { name: "Bar", category: "Test", price: 209.0 }  # within 5%
+          { name: "Foo", category: "Test", price: 110.0 },
+          { name: "Bar", category: "Test", price: 210.0 }
         ]
       }
 
-      it "updates the current product price" do
+      it "updates product competitor price" do
         subject
-        expect(product_1.reload.current_price).to eq(110)
-        expect(product_2.reload.current_price).to eq(200)
+        expect(product_1.reload.competitor_price).to eq(110.0)
+        expect(product_2.reload.competitor_price).to eq(210.0)
       end
     end
 
-    context "when competitor price is lower by more than 5%" do
-      let(:competitor_products) { [ { name: "Foo", category: "Test", price: 90.0 } ] }
-      let(:competitor_products) {
-        [
-          { name: "Foo", category: "Test", price: 90.0 }, # over 5%
-          { name: "Bar", category: "Test", price: 191.0 }  # within 5%
-        ]
-      }
-
-      it "updates the current product price" do
-        subject
-        expect(product_1.reload.current_price).to eq(90)
-        expect(product_2.reload.current_price).to eq(200)
-      end
-    end
-
-    context "when competitor product not found" do
+    context "when there is no competitor product" do
       let(:competitor_products) { [ { name: "Test", category: "Test", price: 50.0 } ] }
 
-      it "no change" do
+      it "products no change" do
         subject
-        expect(product_1.reload.current_price).to eq(100)
-        expect(product_2.reload.current_price).to eq(200)
+        expect(product_1.reload.competitor_price).to eq(100.0)
+        expect(product_2.reload.competitor_price).to eq(200.0)
       end
     end
 
@@ -56,10 +40,10 @@ RSpec.describe CompareCompetitorPriceService do
         ]
       }
 
-      it "does not update the product price" do
+      it "products no change" do
         subject
-        expect(product_1.reload.current_price).to eq(100)
-        expect(product_2.reload.current_price).to eq(200)
+        expect(product_1.reload.competitor_price).to eq(100.0)
+        expect(product_2.reload.competitor_price).to eq(200.0)
       end
     end
   end

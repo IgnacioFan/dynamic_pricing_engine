@@ -16,17 +16,11 @@ class CompareCompetitorPriceService < ApplicationService
       next if product.nil?
 
       comp_price = competitor_product[:price].to_f
-      my_price = product.current_price.to_f
+      my_price = product.competitor_price.to_f
       next if comp_price <= 0.0 || comp_price == my_price
 
-      if price_not_competitive?(comp_price, my_price)
-        product.update_price(price: comp_price, source: "competitor")
-      end
+      product.update!(competitor_price: comp_price)
     end
-  end
-
-  def price_not_competitive?(comp_price, my_price)
-    comp_price > my_price * 1.05 || comp_price < my_price * 0.95
   end
 
   def find_my_product(name, category)

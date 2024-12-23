@@ -5,43 +5,78 @@ RSpec.describe AdjustProductPriceService do
 
   describe ".call" do
     context "when the product is not found" do
-      it "returns an error message" do
+      it "returns an error" do
         result = described_class.call(9999)
         expect(result.error).to eq("Product not found")
       end
     end
 
     context "when the product is high in demand" do
-      let!(:product) { create(:product, current_price: 100.0, demand_score: 60) }
+      context "when demand_price is nil" do
+        let!(:product) { create(:product, default_price: 100, curr_added_frequency: 65, prev_added_frequency: 60) }
 
-      it "increases the product price by 5% and resets the demand score" do
-        result = service
-        expect(result).to be_success
-        expect(result.payload.current_price).to eq(105.0)
-        expect(result.payload.demand_score).to eq(0)
-        expect(result.payload.price_logs.last.source).to eq("high demand")
+        it "increases the product demand price" do
+          result = service.payload
+          expect(result.demand_price).to eq(110.0)
+        end
+      end
+
+      context "when demand_price is not nil" do
+        let!(:product) { create(:product, demand_price: 110, curr_added_frequency: 70, prev_added_frequency: 65) }
+
+        it "increases the product demand price" do
+          result = service.payload
+          expect(result.demand_price).to eq(121.0)
+        end
       end
     end
 
     context "when the product inventory is low" do
-      let!(:product) { create(:product, current_price: 100.0, inventory: { total_inventory: 100, total_reserved: 90 }) }
+      context "when inventory_price is nil" do
+        let!(:product) { create(:product, default_price: 100.0, inventory: { total_inventory: 100, total_reserved: 90 }) }
 
-      it "increases the product price by 10%" do
-        result = service
-        expect(result).to be_success
-        expect(result.payload.current_price).to eq(110.0)
-        expect(result.payload.price_logs.last.source).to eq("low inventory")
+        it "increases the product inventory price" do
+          result = service.payload
+          expect(result.inventory_price).to eq(110.0)
+        end
+      end
+
+      context "when inventory_price is not nil" do
+        let!(:product) { create(:product, inventory_price: 110.0, inventory: { total_inventory: 100, total_reserved: 90 }) }
+
+        it "increases the product inventory price" do
+          result = service.payload
+          expect(result.inventory_price).to eq(121.0)
+        end
       end
     end
 
     context "when the product inventory is high" do
-      let!(:product) { create(:product, current_price: 100.0, inventory: { total_inventory: 100, total_reserved: 10 }) }
+      context "when inventory_price is nil" do
+        let!(:product) { create(:product, default_price: 100.0, inventory: { total_inventory: 100, total_reserved: 10 }) }
 
-      it "decreases the product price by 5%" do
-        result = service
-        expect(result).to be_success
-        expect(result.payload.current_price).to eq(95.0)
-        expect(result.payload.price_logs.last.source).to eq("high inventory")
+        it "decreases the inventory price" do
+          result = service.payload
+          expect(result.inventory_price).to eq(90.0)
+        end
+      end
+
+      context "when inventory_price is nil" do
+        let!(:product) { create(:product, inventory_price: 90.0, inventory: { total_inventory: 100, total_reserved: 10 }) }
+
+        it "decreases the inventory price" do
+          result = service.payload
+          expect(result.inventory_price).to eq(81.0)
+        end
+      end
+    end
+
+    context "when the product inventory is high and the price reaches the bottom line" do
+      let!(:product) { create(:product, inventory_price: 60.0, inventory: { total_inventory: 100, total_reserved: 10 }) }
+
+      it "decreases the inventory price" do
+        result = service.payload
+        expect(result.inventory_price).to eq(60.0)
       end
     end
   end
