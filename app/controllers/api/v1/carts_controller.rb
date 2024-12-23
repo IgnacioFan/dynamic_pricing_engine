@@ -6,7 +6,7 @@ module Api
       end
 
       def create
-        result = AddItemsToCartService.call(items: cart_params[:items])
+        result = AddItemsToCartService.call(cart_id: nil, items: cart_params[:items])
         if result.success?
           @cart = result.payload
           render :create, status: :created

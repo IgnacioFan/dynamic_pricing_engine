@@ -61,4 +61,9 @@ class Product
     (self.inventory[:total_reserved] + change <= self.inventory[:total_inventory]) &&
     (self.inventory[:total_reserved] + change >= 0)
   end
+
+  def update_demand_score(quantity, auto_save: true)
+    self.demand_score = ((self.inventory[:total_reserved] + quantity.to_f)/self.inventory[:total_inventory] * 100).ceil
+    save! if auto_save
+  end
 end
