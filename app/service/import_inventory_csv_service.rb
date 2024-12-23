@@ -5,36 +5,32 @@ class ImportInventoryCsvService < ApplicationService
 
   def initialize(csv_file)
     @csv = CSV.read(csv_file)
+    @products = []
   end
 
   def call
     return failure("Invalid headers in csv") unless valid_header?
 
-    handle_csv
-    success("Complete!")
+    process_csv
+    success(@products)
   end
 
   private
 
-  def handle_csv
+  def process_csv
     @csv.each_with_index do |row, index|
       next if index == 0 # skip headers
 
-      product = Product.new(
+      product = Product.create(
         name: row[0],
-        category: row[1]&.to_s,
+        category: row[1].to_s,
+        default_price: row[2].to_f,
+        inventory: {
+          total_inventory: row[3].to_i,
+          total_reserved: 0
+        }
       )
-      product = product.update_price(
-        price: row[2]&.to_f,
-        source: :csv_imported,
-        auto_save: false
-      )
-      product = product.update_inventory(
-        change: row[3]&.to_i,
-        type: :csv_imported,
-        auto_save: false
-      )
-      product.save!
+      @products << product
     end
   end
 

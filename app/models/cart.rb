@@ -5,13 +5,9 @@ class Cart
   embeds_many :cart_items
 
   def add_product!(product_id, quantity)
-    existing_item = find_cart_item(product_id)
-
-    if existing_item.present?
-      existing_item[:quantity] += quantity
-    else
-      cart_items << { product_id:, quantity: }
-    end
+    item = cart_items.find_or_initialize_by(product_id: product_id)
+    item.quantity = quantity
+    item.save!
   end
 
   def remove_item(item_id)

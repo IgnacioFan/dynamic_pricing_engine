@@ -5,12 +5,10 @@ module Api
 
       def index
         @products = Product.all
-        render json: @products
       end
 
       def show
-        @product = Product.find_by(id: params[:id])
-        @dynamic_price = @product.price_logs.last
+        @product = Product.find(params[:id])
       end
 
       def import

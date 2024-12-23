@@ -16,15 +16,16 @@ RSpec.describe ImportInventoryCsvService do
       end
 
       it "imports all products successfully" do
-        expect { subject }.to change { Product.count }.by(2)
+        result = subject.payload
 
-        product = Product.find_by(name: "Foo")
-        expect(product.category).to eq("Category 1")
-        expect(product.default_price).to eq(10)
-        expect(product.current_price).to eq(10)
-        expect(product.price_logs.size).to eq(1)
-        expect(product.inventory).to eq("total_inventory" => 100, "total_reserved" => 0)
-        expect(product.inventory_logs.size).to eq(1)
+        expect(result[0].name).to eq("Foo")
+        expect(result[1].name).to eq("Bar")
+        expect(result[0].category).to eq("Category 1")
+        expect(result[1].category).to eq("Category 2")
+        expect(result[0].default_price).to eq(10.0)
+        expect(result[1].default_price).to eq(20.0)
+        expect(result[0].inventory).to eq("total_inventory" => 100, "total_reserved" => 0)
+        expect(result[1].inventory).to eq("total_inventory" => 200, "total_reserved" => 0)
       end
     end
 

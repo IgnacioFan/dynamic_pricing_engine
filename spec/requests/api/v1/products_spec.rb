@@ -1,6 +1,46 @@
 require 'rails_helper'
 
 RSpec.describe "Products API", type: :request do
+  describe "GET /api/v1/products" do
+    let(:product_1) { build(:product, name: "Foo", default_price: 100, inventory: { total_inventory: 100, total_reserved: 0 }) }
+    let(:product_2) { build(:product, name: "Bar", default_price: 200, inventory: { total_inventory: 200, total_reserved: 0 }) }
+
+    before { allow(Product).to receive(:all).and_return([ product_1, product_2 ]) }
+
+    context "when products exist" do
+      it "returns status ok (200)" do
+        get api_v1_products_path
+
+        expect(response).to have_http_status(:ok)
+        parsed_response = JSON.parse(response.body, symbolize_names: true)[:products]
+        expect(parsed_response[0][:name]).to eq(product_1.name)
+        expect(parsed_response[1][:name]).to eq(product_2.name)
+        expect(parsed_response[0][:dynamic_price]).to eq(product_1.default_price)
+        expect(parsed_response[1][:dynamic_price]).to eq(product_2.default_price)
+        expect(parsed_response[0][:total_inventory]).to eq(product_1.inventory[:total_inventory])
+        expect(parsed_response[1][:total_inventory]).to eq(product_2.inventory[:total_inventory])
+      end
+    end
+  end
+
+  describe "GET /api/v1/products/:id" do
+    let(:product) { build(:product) }
+
+    before { allow(Product).to receive(:find).and_return(product) }
+
+    context "when product exists" do
+      it "returns status ok (200)" do
+        get api_v1_product_path(product.id)
+
+        expect(response).to have_http_status(:ok)
+        parsed_response = JSON.parse(response.body, symbolize_names: true)
+        expect(parsed_response[:name]).to eq(product.name)
+        expect(parsed_response[:dynamic_price]).to eq(product.default_price)
+        expect(parsed_response[:total_inventory]).to eq(product.inventory[:total_inventory])
+      end
+    end
+  end
+
   describe "POST /api/v1/products/import" do
     let(:file_format) { 'text/csv' }
     let(:csv_file) { fixture_file_upload('valid_inventory.csv', file_format) }
@@ -8,12 +48,10 @@ RSpec.describe "Products API", type: :request do
     let(:product_2) { build(:product, name: "Bar", default_price: 200, inventory: { total_inventory: 200, total_reserved: 0 }) }
     let(:service_result) { double(success?: true, payload: [ product_1, product_2 ]) }
 
-    before do
-      allow(ImportInventoryCsvService).to receive(:call).and_return(service_result)
-    end
+    before { allow(ImportInventoryCsvService).to receive(:call).and_return(service_result) }
 
-    context "when the file is valid and service succeeds" do
-      it "returns status ok (200)" do
+    context "when the file is valid" do
+      it "returns status created (201)" do
         post import_api_v1_products_path, params: { file: csv_file }
 
         expect(response).to have_http_status(:created)

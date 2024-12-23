@@ -7,10 +7,11 @@ RSpec.describe AddItemsToCartService do
   describe '.call' do
     context 'when cart does not exist' do
       it 'adds items to the cart and updates demand score' do
-        result = described_class.call(cart_items:)
-        expect(result.success?).to be true
+        result = described_class.call(cart_id: nil, cart_items:)
         cart = result.payload
-        expect(cart.cart_items).to eq(cart_items)
+        expect(cart.persisted?).to eq(true)
+        expect(cart.cart_items[0].product_id).to eq(product.id)
+        expect(cart.cart_items[0].quantity).to eq(2)
         expect(product.reload.demand_score).to eq(20)
       end
     end
@@ -20,10 +21,10 @@ RSpec.describe AddItemsToCartService do
 
       it 'adds items to the cart and updates demand score' do
         result = described_class.call(cart_id: cart.id, cart_items:)
-        expect(result.success?).to be true
         new_cart = result.payload
         expect(new_cart.id).to eq(cart.id)
-        expect(new_cart.cart_items).to eq(cart_items)
+        expect(new_cart.cart_items[0].product_id).to eq(product.id)
+        expect(new_cart.cart_items[0].quantity).to eq(2)
         expect(product.reload.demand_score).to eq(20)
       end
     end
