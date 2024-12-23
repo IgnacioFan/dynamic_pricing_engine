@@ -4,8 +4,13 @@ class Product
 
   field :name, type: String
   field :category, type: String
+
+  field :competitor_price, type: BigDecimal
   field :default_price, type: BigDecimal
-  field :current_price, type: BigDecimal, default: -> { default_price }
+  field :demand_price, type: BigDecimal
+  field :inventory_price, type: BigDecimal
+
+  field :current_price, type: BigDecimal
   # use demand_score to calculate if product is high in demand
   field :demand_score, type: Integer, default: 0
 
@@ -17,6 +22,10 @@ class Product
   validates :name, presence: true
   validates :name, uniqueness: { scope: :category }
   validates :category, presence: true
+
+  def dynamic_price
+    [ competitor_price, default_price, demand_price, inventory_price ].compact.max
+  end
 
   def update_price(price:, source:, auto_save: true)
     return unless price != self.current_price
@@ -57,9 +66,11 @@ class Product
     change > 0 && self.inventory[:total_inventory] == 0
   end
 
-  def available_inventory?(change)
-    (self.inventory[:total_reserved] + change <= self.inventory[:total_inventory]) &&
-    (self.inventory[:total_reserved] + change >= 0)
+  def available_inventory?(quantity)
+    return false if quantity <= 0
+
+    total_reserved = inventory[:total_reserved] + quantity
+    total_reserved <= inventory[:total_inventory]
   end
 
   def update_demand_score(quantity, auto_save: true)
