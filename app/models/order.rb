@@ -10,6 +10,8 @@ class Order
 
   def self.place_order!(cart_id)
     cart = Cart.find(cart_id)
+    order = new(cart_id:)
+
     errors = []
     total_price = 0
     total_quantity = 0
@@ -19,7 +21,7 @@ class Order
     cart.cart_items.each do |item|
       product = item.product
       if product.available_inventory?(item.quantity)
-        order_items.build(
+        order.order_items.build(
           product_id: item.product_id,
           quantity: item.quantity,
           price: product.dynamic_price
@@ -32,13 +34,12 @@ class Order
     end
 
     if errors.any?
-      self.order_items = []
       [ nil, errors.join(", ") ]
     else
-      self.total_price = total_price
-      self.total_quantity = total_quantity
-      save!
-      [ self, nil ]
+      order.total_price = total_price
+      order.total_quantity = total_quantity
+      order.save!
+      [ order, nil ]
     end
   rescue Mongoid::Errors::DocumentNotFound
     [ nil, "Cart not found" ]

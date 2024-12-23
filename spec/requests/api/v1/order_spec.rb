@@ -10,7 +10,7 @@ RSpec.describe 'Orders API', type: :request do
     before { allow(Order).to receive(:place_order!).with(cart_id).and_return([ order, nil ]) }
 
     context 'when the order is placed successfully' do
-      it 'returns the order details with status created' do
+      it 'returns status created (201)' do
         post api_v1_orders_path, params: { cart_id: cart_id }
 
         expect(response).to have_http_status(:created)
@@ -30,7 +30,7 @@ RSpec.describe 'Orders API', type: :request do
 
       before { allow(Order).to receive(:place_order!).with(cart_id).and_return([ nil, error_message ]) }
 
-      it 'returns an error message with status bad_request' do
+      it 'returns status bad request (400)' do
         post api_v1_orders_path, params: { cart_id: cart_id }
 
         expect(response).to have_http_status(:bad_request)
