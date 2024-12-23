@@ -12,7 +12,7 @@ module Api
       end
 
       def destroy
-        result = RemoveItemsFromCartService.call(cart_id: params[:cart_id], cart_item_ids: [ params[:id] ])
+        result = RemoveItemsFromCartService.call(cart_id: params[:cart_id], cart_item_id: params[:id])
         if result.success?
           @cart_item = result.payload
           render :destroy

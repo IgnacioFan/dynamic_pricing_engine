@@ -15,13 +15,15 @@ class Cart
   end
 
   def remove_item(item_id)
-    return "cart is empty" unless cart_items.any?
+    return [ nil, "Cart is empty" ] if cart_items.empty?
 
-    item = @cart.cart_items.find(params[:product_id])
-    return "cart item not found" unless item
+    item = cart_items.find_by(id: item_id)
 
     item.destroy
-    nil
+
+    [ item, nil ]
+  rescue Mongoid::Errors::DocumentNotFound
+    [ nil, "Cart item not found" ]
   end
 
   private
