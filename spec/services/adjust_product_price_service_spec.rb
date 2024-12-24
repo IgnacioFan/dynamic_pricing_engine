@@ -17,7 +17,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
 
         it "increases the product demand price" do
           result = service.payload
-          expect(result.demand_price).to eq(110.0)
+          expect(result.demand_price).to eq(105.0)
         end
       end
 
@@ -26,7 +26,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
 
         it "increases the product demand price" do
           result = service.payload
-          expect(result.demand_price).to eq(121.0)
+          expect(result.demand_price).to eq(115.0)
         end
       end
     end
@@ -37,7 +37,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
 
         it "increases the product inventory price" do
           result = service.payload
-          expect(result.inventory_price).to eq(110.0)
+          expect(result.inventory_price).to eq(105.0)
         end
       end
 
@@ -46,7 +46,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
 
         it "increases the product inventory price" do
           result = service.payload
-          expect(result.inventory_price).to eq(121.0)
+          expect(result.inventory_price).to eq(115.0)
         end
       end
     end
@@ -57,7 +57,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
 
         it "decreases the inventory price" do
           result = service.payload
-          expect(result.inventory_price).to eq(90.0)
+          expect(result.inventory_price).to eq(95.0)
         end
       end
 
@@ -66,7 +66,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
 
         it "decreases the inventory price" do
           result = service.payload
-          expect(result.inventory_price).to eq(81.0)
+          expect(result.inventory_price).to eq(85.0)
         end
       end
     end

@@ -1,7 +1,7 @@
 class AdjustProductPriceService < ApplicationService
-  PRICE_INCR_RATE = 1.10.freeze
-  PRICE_DECR_RATE = 0.90.freeze
-  PRICE_BOTTOM_LINE = 0.60.freeze
+  PRICE_INCR_RATE = 0.05.freeze
+  PRICE_DECR_RATE = 0.05.freeze
+  PRICE_BOTTOM_LINE = 0.75.freeze
 
   def initialize(product_id)
     @product = find_product(product_id)
@@ -29,7 +29,7 @@ class AdjustProductPriceService < ApplicationService
   def adjust_demand_price
     # increase the price if the product is frequently added to carts or purchased
     if product.high_demand_product?
-      (product.demand_price || product.default_price) * PRICE_INCR_RATE
+      (product.demand_price || product.default_price) + (product.default_price * PRICE_INCR_RATE)
     else
       product.demand_price
     end
@@ -38,10 +38,10 @@ class AdjustProductPriceService < ApplicationService
   def adjust_inventory_price
     # increase the price if the product's inventory level is low
     if product.low_inventory_level?
-      (product.inventory_price || product.default_price) * PRICE_INCR_RATE
+      (product.inventory_price || product.default_price) + (product.default_price * PRICE_INCR_RATE)
     # decrease the price if the product's inventory level is high
     elsif product.high_inventory_level?
-      (product.inventory_price || product.default_price) * PRICE_DECR_RATE
+      (product.inventory_price || product.default_price) - (product.default_price * PRICE_DECR_RATE)
     else
       product.inventory_price
     end
