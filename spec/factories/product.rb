@@ -2,8 +2,11 @@ FactoryBot.define do
   factory :product do
     name { "Foo" }
     category { "Test" }
+
     default_price { 100.0 }
-    demand_score { 0 }
+
+    curr_added_frequency { 0 }
+    prev_added_frequency { 0 }
 
     inventory {
       {

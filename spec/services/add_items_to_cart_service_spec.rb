@@ -12,7 +12,7 @@ RSpec.describe AddItemsToCartService do
         expect(cart.persisted?).to eq(true)
         expect(cart.cart_items[0].product_id).to eq(product.id)
         expect(cart.cart_items[0].quantity).to eq(2)
-        expect(product.reload.demand_score).to eq(20)
+        expect(product.reload.curr_added_frequency).to eq(20)
       end
     end
 
@@ -25,7 +25,7 @@ RSpec.describe AddItemsToCartService do
         expect(new_cart.id).to eq(cart.id)
         expect(new_cart.cart_items[0].product_id).to eq(product.id)
         expect(new_cart.cart_items[0].quantity).to eq(2)
-        expect(product.reload.demand_score).to eq(20)
+        expect(product.reload.curr_added_frequency).to eq(20)
       end
     end
 
@@ -35,7 +35,7 @@ RSpec.describe AddItemsToCartService do
       it 'returns failure' do
         result = described_class.call(cart_items:)
         expect(result.success?).to be false
-        expect(result.error).to match(/invalid item data/)
+        expect(result.error).to eq("Invalid item data: #{cart_items.first}")
       end
     end
 
@@ -45,7 +45,7 @@ RSpec.describe AddItemsToCartService do
       it 'returns failure' do
         result = described_class.call(cart_items:)
         expect(result.success?).to be false
-        expect(result.error).to match(/product not found/)
+        expect(result.error).to eq("Product not found ID (123)")
       end
     end
 
@@ -55,7 +55,7 @@ RSpec.describe AddItemsToCartService do
       it 'returns failure' do
         result = described_class.call(cart_items:)
         expect(result.success?).to be false
-        expect(result.error).to match(/insufficient inventory/)
+        expect(result.error).to eq("Insufficient inventory for product #{product.id}")
       end
     end
 
@@ -65,7 +65,7 @@ RSpec.describe AddItemsToCartService do
       it 'returns failure' do
         result = described_class.call(cart_items:)
         expect(result.success?).to be false
-        expect(result.error).to match(/items cannot be empty/)
+        expect(result.error).to eq("Items cannot be empty")
       end
     end
   end

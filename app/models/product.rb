@@ -4,6 +4,7 @@ class Product
 
   INVENTORY_LOW_BAR = 0.2.freeze
   INVENTORY_HIGH_BAR = 0.8.freeze
+  HIGH_DEMAND_BAR = 60.freeze
 
   field :name, type: String
   field :category, type: String
@@ -13,9 +14,7 @@ class Product
   field :demand_price, type: BigDecimal
   field :inventory_price, type: BigDecimal
 
-  # use demand_score to calculate if product is high in demand
-  field :demand_score, type: Integer, default: 0
-
+  # use curr_added_frequency and prev_added_frequency to validate if product is high in demand
   field :curr_added_frequency, type: Integer, default: 0
   field :prev_added_frequency, type: Integer, default: 0
 
@@ -36,13 +35,13 @@ class Product
     total_reserved <= inventory[:total_inventory]
   end
 
-  def update_demand_score(quantity, auto_save: true)
-    self.demand_score = ((self.inventory[:total_reserved] + quantity.to_f)/self.inventory[:total_inventory] * 100).ceil
-    save! if auto_save
+  def update_curr_added_frequency(quantity)
+    self.curr_added_frequency = ((self.inventory[:total_reserved] + quantity.to_f)/self.inventory[:total_inventory] * 100).ceil
+    save!
   end
 
   def high_demand_product?
-    return false if curr_added_frequency < 60
+    return false if curr_added_frequency < HIGH_DEMAND_BAR
     curr_added_frequency - prev_added_frequency >= 5
   end
 
