@@ -60,4 +60,20 @@ class Product
 
     (total_inventory - total_reserved) / total_inventory > INVENTORY_HIGH_BAR
   end
+
+  def self.high_demand_products
+    Product.where(
+      :"current_demand_count".gt => HIGH_DEMAND_BAR,
+      :$expr => {
+        :$gte => [
+          {
+            :$subtract => [
+              "$current_demand_count",
+              "$previous_demand_count"
+            ]
+          }, 5
+        ]
+      }
+    )
+  end
 end

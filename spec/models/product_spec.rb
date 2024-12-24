@@ -60,4 +60,25 @@ RSpec.describe Product, type: :model do
       it { expect(product.low_inventory_level?).to be(false) }
     end
   end
+
+  describe '.high_demand_products' do
+    let!(:high_demand_product) { create(:product, name: "high", current_demand_count: 70, previous_demand_count: 60) }
+    let!(:low_demand_product) { create(:product, name: "low", current_demand_count: 50, previous_demand_count: 45) }
+    let!(:midium_demand_product) { create(:product, name: "midium", current_demand_count: 65, previous_demand_count: 61) }
+
+    it 'returns only high demand products' do
+      result = Product.high_demand_products
+      expect(result).to include(high_demand_product)
+      expect(result).not_to include(low_demand_product)
+      expect(result).not_to include(midium_demand_product)
+    end
+
+    it 'demand updates periodically' do
+      midium_demand_product.update!(current_demand_count: 70, previous_demand_count: 65)
+
+      result = Product.high_demand_products
+      expect(result).to include(high_demand_product)
+      expect(result).to include(midium_demand_product)
+    end
+  end
 end
