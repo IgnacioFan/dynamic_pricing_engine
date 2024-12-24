@@ -7,7 +7,7 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - mongo_data:/data/db
+      - mongo-data:/data/db
 
   redis:
     container_name: redis
@@ -18,6 +18,6 @@ services:
       - redis-data:/data
 
 volumes:
-  mongo_data:
+  mongo-data:
   redis-data:
 

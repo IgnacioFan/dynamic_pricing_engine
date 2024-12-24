@@ -1,24 +1,36 @@
-# README
+# Dynamic Pricing Engine
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+An e-commerce dynamic pricing engine built with Ruby on Rails, Redis, and MongoDB, featuring realtime price adjustments.
 
-Things you may want to cover:
+## Overview
+project description
 
-* Ruby version
+architecture
 
-* System dependencies
+## API
 
-* Configuration
+- `GET /api/v1/products`
+  - Description: List products with dynamic price
+- `GET /api/v1/products/:id`
+  - Description: Get specific product details
+- `POST /api/v1/products/import`
+  - Description: Create product data through CSV file
+- `POST /api/v1/carts`
+  - Description: Create a shopping cart with product items
+- `POST /api/v1/carts/:cart_id/items`
+  - Description: Add items to the shopping cart
+- `DELETE /api/v1/carts/:cart_id/items/:id`
+  - Description: Remove specific item from the shopping cart
+- `POST /api/v1/order`
+  - Description: Create an order
 
-* Database creation
+## How to run
 
-* Database initialization
+prerequisites
 
-* How to run the test suite
+set up env
 
-* Services (job queues, cache servers, search engines, etc.)
+testing
 
-* Deployment instructions
+## Deployment
 
-* ...
