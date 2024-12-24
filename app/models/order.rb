@@ -78,7 +78,7 @@ class Order
     caches.each do |product, quantity|
       product.inventory[:total_reserved] += quantity
       product.update_curr_added_frequency(quantity)
-      MonitorDemandJob.perform_async(product.id.to_s) unless Rails.env.test?
+      TrackProductDemandJob.perform_async(product.id.to_s) unless Rails.env.test?
     end
   end
 end

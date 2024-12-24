@@ -1,7 +1,7 @@
 require 'rails_helper'
 require 'sidekiq/testing'
 
-RSpec.describe MonitorDemandJob, type: :job do
+RSpec.describe TrackProductDemandJob, type: :job do
   describe "#perform" do
     context "when the job runs successfully" do
       before do

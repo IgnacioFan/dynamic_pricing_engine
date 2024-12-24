@@ -1,4 +1,4 @@
-class MonitorDemandJob
+class TrackProductDemandJob
   include Sidekiq::Job
   sidekiq_options retry: 2
 
