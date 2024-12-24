@@ -46,7 +46,8 @@ group :development, :test do
 end
 
 group :test do
-  gem "rspec", "~> 3.13"
-  gem "rspec-rails", "~> 7.1"
-  gem "factory_bot_rails", "~> 6"
+  gem "rspec"
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "rspec-rails"
 end

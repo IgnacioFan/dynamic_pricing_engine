@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe AddItemsToCartService do
+RSpec.describe AddItemsToCartService, type: :service do
   let(:product) { create(:product, inventory: { total_inventory: 10, total_reserved: 0 }) }
   let(:cart_items) { [ { product_id: product.id, quantity: 2 } ] }
 
@@ -68,9 +68,5 @@ RSpec.describe AddItemsToCartService do
         expect(result.error).to eq("Items cannot be empty")
       end
     end
-  end
-
-  after do
-    Mongoid.truncate!
   end
 end

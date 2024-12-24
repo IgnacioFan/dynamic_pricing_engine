@@ -56,8 +56,4 @@ RSpec.describe Order, type: :model do
       end
     end
   end
-
-  after do
-    Mongoid.truncate!
-  end
 end

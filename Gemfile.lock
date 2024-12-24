@@ -281,14 +281,14 @@ DEPENDENCIES
   bootsnap
   brakeman
   debug
-  factory_bot_rails (~> 6)
+  factory_bot_rails
   httparty (~> 0.22)
   jbuilder (~> 2.13)
   mongoid (~> 9)
   puma (>= 5.0)
   rails (~> 7.2.0)
-  rspec (~> 3.13)
-  rspec-rails (~> 7.1)
+  rspec
+  rspec-rails
   rubocop-rails-omakase
   sidekiq (~> 7.3)
   sqlite3 (>= 1.4)

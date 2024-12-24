@@ -30,8 +30,4 @@ RSpec.describe RemoveItemsFromCartService, type: :service do
       end
     end
   end
-
-  after do
-    Mongoid.truncate!
-  end
 end

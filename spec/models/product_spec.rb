@@ -60,8 +60,4 @@ RSpec.describe Product, type: :model do
       it { expect(product.low_inventory_level?).to be(false) }
     end
   end
-
-  after do
-    Mongoid.truncate!
-  end
 end

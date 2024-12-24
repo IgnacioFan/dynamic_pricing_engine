@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe AdjustProductPriceService do
+RSpec.describe AdjustProductPriceService, type: :service do
   let(:service) { described_class.call(product.id) }
 
   describe ".call" do
@@ -79,9 +79,5 @@ RSpec.describe AdjustProductPriceService do
         expect(result.inventory_price).to eq(60.0)
       end
     end
-  end
-
-  after do
-    Mongoid.truncate!
   end
 end

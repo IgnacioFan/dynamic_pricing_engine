@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe CompareCompetitorPriceService do
+RSpec.describe CompareCompetitorPriceService, type: :service do
   let!(:product_1) { create(:product, name: "Foo", category: "Test", competitor_price: 100.0) }
   let!(:product_2) { create(:product, name: "Bar", category: "Test", competitor_price: 200.0) }
 
@@ -46,9 +46,5 @@ RSpec.describe CompareCompetitorPriceService do
         expect(product_2.reload.competitor_price).to eq(200.0)
       end
     end
-  end
-
-  after do
-    Mongoid.truncate!
   end
 end

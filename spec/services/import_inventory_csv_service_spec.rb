@@ -1,7 +1,7 @@
 require "rails_helper"
 require "csv"
 
-RSpec.describe ImportInventoryCsvService do
+RSpec.describe ImportInventoryCsvService, type: :service do
   describe ".call" do
     subject { described_class.call(csv_file.path) }
 
@@ -50,6 +50,5 @@ RSpec.describe ImportInventoryCsvService do
   after do
     csv_file.close
     csv_file.unlink
-    Mongoid.truncate!
   end
 end
