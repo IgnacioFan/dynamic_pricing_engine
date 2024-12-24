@@ -7,16 +7,42 @@ class Order
   field :total_quantity, type: Integer
 
   embeds_many :order_items
+  belongs_to :cart, class_name: "Cart", inverse_of: :order
 
   def self.place_order!(cart_id)
-    cart = Cart.find(cart_id)
-    order = new(cart_id:)
+    cart = find_cart(cart_id)
+    return [ nil, "Cart not found" ] unless cart
 
+    order = find_or_initialize_order(cart)
+    return [ nil, "Order has been created" ] if order.persisted?
+
+    errors, caches, totals = process_cart_items(cart, order)
+    return [ nil, errors.join(", ") ] if errors.any?
+
+    store_order(order, totals, caches)
+  end
+
+  private
+
+  def self.find_cart(cart_id)
+    Cart.find(cart_id)
+  rescue Mongoid::Errors::DocumentNotFound
+    nil
+  end
+
+  def self.find_or_initialize_order(cart)
+    cart.order.presence || new(cart_id: cart.id)
+  end
+
+  def self.process_cart_items(cart, order)
     errors = []
-    total_price = 0
-    total_quantity = 0
+    caches = {}
+    totals = { price: 0, quantity: 0 }
 
-    errors << "Cart is empty" unless cart.cart_items.any?
+    if cart.cart_items.empty?
+      errors << "Cart is empty"
+      return [ errors, caches, totals ]
+    end
 
     cart.cart_items.each do |item|
       product = item.product
@@ -26,22 +52,33 @@ class Order
           quantity: item.quantity,
           price: product.dynamic_price
         )
-        total_price += product.dynamic_price * item.quantity
-        total_quantity += item.quantity
+        totals[:price] += product.dynamic_price * item.quantity
+        totals[:quantity] += item.quantity
+        caches[product] = item.quantity
       else
         errors << "Product #{product.name} (ID: #{item.product_id}) is unavailable"
       end
     end
 
-    if errors.any?
-      [ nil, errors.join(", ") ]
-    else
-      order.total_price = total_price
-      order.total_quantity = total_quantity
-      order.save!
+    [ errors, caches, totals ]
+  end
+
+  def self.store_order(order, totals, caches)
+    order.assign_attributes(total_price: totals[:price], total_quantity: totals[:quantity])
+
+    if order.save!
+      update_inventory_and_trigger_jobs(caches)
       [ order, nil ]
+    else
+      [ nil, "Failed to save order" ]
     end
-  rescue Mongoid::Errors::DocumentNotFound
-    [ nil, "Cart not found" ]
+  end
+
+  def self.update_inventory_and_trigger_jobs(caches)
+    caches.each do |product, quantity|
+      product.inventory[:total_reserved] += quantity
+      product.update_curr_added_frequency(quantity)
+      MonitorDemandJob.perform_async(product.id.to_s) unless Rails.env.test?
+    end
   end
 end

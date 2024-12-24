@@ -13,6 +13,18 @@ RSpec.describe Order, type: :model do
         expect(order.total_price).to eq(product.dynamic_price * cart_item.quantity)
         expect(order.total_quantity).to eq(cart_item.quantity)
         expect(order.order_items.size).to eq(1)
+
+        expect(product.reload.inventory).to eq("total_inventory" => 10, "total_reserved" => 2)
+      end
+    end
+
+    context 'when a product is unavailable' do
+      before { create(:order, cart: cart) }
+
+      it 'returns an error' do
+        order, error = described_class.place_order!(cart.id)
+        expect(order).to be_nil
+        expect(error).to eq("Order has been created")
       end
     end
 
