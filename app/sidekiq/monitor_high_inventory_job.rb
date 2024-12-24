@@ -1,3 +1,5 @@
+# This job runs every day at midnight
+#
 class MonitorHighInventoryJob
   include Sidekiq::Job
   sidekiq_options retry: 2

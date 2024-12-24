@@ -2,6 +2,8 @@ require 'rails_helper'
 require 'sidekiq/testing'
 
 RSpec.describe TrackProductDemandJob, type: :job do
+  before { Sidekiq::Testing.fake! }
+
   describe "#perform" do
     context "when the job runs successfully" do
       before do

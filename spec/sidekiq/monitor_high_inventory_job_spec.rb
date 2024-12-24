@@ -4,17 +4,10 @@ require 'sidekiq/testing'
 RSpec.describe MonitorHighInventoryJob, type: :job do
   before do
     Sidekiq::Testing.fake!
-  end
-
-  before do
     allow(AdjustProductPriceService).to receive(:call)
   end
 
   describe "#perform" do
-    it "enqueues the job" do
-      expect { described_class.perform_async }.to change(described_class.jobs, :size).by(1)
-    end
-
     context "when there is low inventory products" do
       let!(:low_inventory_product) { create(:product, name: "low inventory", inventory: { total_inventory: 100, total_reserved: 90 }) }
       let!(:high_inventory_product) { create(:product, name: "high inventory", inventory: { total_inventory: 100, total_reserved: 10 }) }

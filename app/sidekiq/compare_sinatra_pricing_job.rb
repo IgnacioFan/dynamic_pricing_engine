@@ -1,3 +1,5 @@
+# This job runs every 2 hours
+#
 class CompareSinatraPricingJob
   include Sidekiq::Job
   sidekiq_options retry: 2

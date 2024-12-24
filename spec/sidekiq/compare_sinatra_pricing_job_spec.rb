@@ -2,6 +2,8 @@ require 'rails_helper'
 require 'sidekiq/testing'
 
 RSpec.describe CompareSinatraPricingJob, type: :job do
+  before { Sidekiq::Testing.fake! }
+
   describe '#perform' do
     let(:mock_service) { instance_double(SinatraPricingApi) }
 

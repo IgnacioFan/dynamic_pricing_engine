@@ -1,3 +1,5 @@
+# This job runs when a product is added to cart or an order is created
+#
 class TrackProductDemandJob
   include Sidekiq::Job
   sidekiq_options retry: 2
