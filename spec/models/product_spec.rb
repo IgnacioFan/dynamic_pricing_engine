@@ -22,17 +22,17 @@ RSpec.describe Product, type: :model do
 
   describe "#high_demand_product?" do
     context "the current pointer is over 60" do
-      let(:product) { build(:product, curr_added_frequency: 62, prev_added_frequency: 50) }
+      let(:product) { build(:product, current_demand_count: 62, previous_demand_count: 50) }
       it { expect(product.high_demand_product?).to be(true) }
     end
 
     context "the difference between current pointer and previous pointer is greater than 5" do
-      let(:product) { build(:product, curr_added_frequency: 65, prev_added_frequency: 60) }
+      let(:product) { build(:product, current_demand_count: 65, previous_demand_count: 60) }
       it { expect(product.high_demand_product?).to be(true) }
     end
 
     context "the difference between current pointer and previous pointer is less than 5" do
-      let(:product) { build(:product, curr_added_frequency: 96, prev_added_frequency: 92) }
+      let(:product) { build(:product, current_demand_count: 96, previous_demand_count: 92) }
       it { expect(product.high_demand_product?).to be(false) }
     end
   end

@@ -63,7 +63,7 @@ class AddItemsToCartService < ApplicationService
 
   def update_product_frequencies
     caches.each do |product, quantity|
-      product.update_curr_added_frequency(quantity)
+      product.update_current_demand_count(quantity)
       TrackProductDemandJob.perform_async(product.id.to_s) if !Rails.env.test?
     end
   end

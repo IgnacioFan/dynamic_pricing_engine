@@ -4,7 +4,6 @@ class MonitorHighInventoryJob
 
   def perform
     Product.high_inventory_products.each do |product|
-      # debugger
       AdjustProductPriceService.call(product.id.to_s)
     end
   end

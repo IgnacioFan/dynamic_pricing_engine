@@ -14,9 +14,9 @@ class Product
   field :demand_price, type: BigDecimal
   field :inventory_price, type: BigDecimal
 
-  # use curr_added_frequency and prev_added_frequency to validate if product is high in demand
-  field :curr_added_frequency, type: Integer, default: 0
-  field :prev_added_frequency, type: Integer, default: 0
+  # use current_demand_count and previous_demand_count to track if the product is high in demand
+  field :current_demand_count, type: Integer, default: 0
+  field :previous_demand_count, type: Integer, default: 0
 
   field :inventory, type: Hash, default: { total_inventory: 0, total_reserved: 0 }
 
@@ -35,14 +35,14 @@ class Product
     total_reserved <= inventory[:total_inventory]
   end
 
-  def update_curr_added_frequency(quantity)
-    self.curr_added_frequency = ((self.inventory[:total_reserved] + quantity.to_f)/self.inventory[:total_inventory] * 100).ceil
+  def update_current_demand_count(quantity)
+    self.current_demand_count = ((self.inventory[:total_reserved] + quantity.to_f)/self.inventory[:total_inventory] * 100).ceil
     save!
   end
 
   def high_demand_product?
-    return false if curr_added_frequency < HIGH_DEMAND_BAR
-    curr_added_frequency - prev_added_frequency >= 5
+    return false if current_demand_count < HIGH_DEMAND_BAR
+    current_demand_count - previous_demand_count >= 5
   end
 
   def low_inventory_level?

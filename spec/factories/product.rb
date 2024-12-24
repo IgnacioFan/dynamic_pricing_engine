@@ -5,8 +5,8 @@ FactoryBot.define do
 
     default_price { 100.0 }
 
-    curr_added_frequency { 0 }
-    prev_added_frequency { 0 }
+    current_demand_count { 0 }
+    previous_demand_count { 0 }
 
     inventory {
       {

@@ -77,7 +77,7 @@ class Order
   def self.update_inventory_and_trigger_jobs(caches)
     caches.each do |product, quantity|
       product.inventory[:total_reserved] += quantity
-      product.update_curr_added_frequency(quantity)
+      product.update_current_demand_count(quantity)
       TrackProductDemandJob.perform_async(product.id.to_s) unless Rails.env.test?
     end
   end

@@ -13,7 +13,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
 
     context "when the product is high in demand" do
       context "when demand_price is nil" do
-        let!(:product) { create(:product, default_price: 100, curr_added_frequency: 65, prev_added_frequency: 60) }
+        let!(:product) { create(:product, default_price: 100, current_demand_count: 65, previous_demand_count: 60) }
 
         it "increases the product demand price" do
           result = service.payload
@@ -22,7 +22,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
       end
 
       context "when demand_price is not nil" do
-        let!(:product) { create(:product, demand_price: 110, curr_added_frequency: 70, prev_added_frequency: 65) }
+        let!(:product) { create(:product, demand_price: 110, current_demand_count: 70, previous_demand_count: 65) }
 
         it "increases the product demand price" do
           result = service.payload
