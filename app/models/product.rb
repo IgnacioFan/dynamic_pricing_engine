@@ -25,7 +25,15 @@ class Product
   validates :category, presence: true
 
   def dynamic_price
-    [ competitor_price, default_price, demand_price, inventory_price ].compact.max
+    if high_demand_product?
+      [ competitor_price, default_price, demand_price ].compact.max
+    elsif low_inventory_level?
+      [ competitor_price, default_price, demand_price, inventory_price ].compact.max
+    elsif high_inventory_level?
+      [ competitor_price, default_price, demand_price, inventory_price ].compact.min
+    else
+      [ competitor_price, default_price ].compact.max
+    end
   end
 
   def available_inventory?(quantity)
@@ -59,6 +67,26 @@ class Product
     return false if total_inventory.zero?
 
     (total_inventory - total_reserved) / total_inventory > INVENTORY_HIGH_BAR
+  end
+
+  def self.high_inventory_products
+    Product.where(
+      :"inventory.total_inventory".gt => 0,
+      :$expr => {
+        :$gt => [
+          { :$divide => [
+              { :$subtract => [
+                "$inventory.total_inventory",
+                "$inventory.total_reserved"
+                ]
+              },
+              "$inventory.total_inventory"
+            ]
+          },
+          INVENTORY_HIGH_BAR
+        ]
+      }
+    )
   end
 
   def self.high_demand_products
