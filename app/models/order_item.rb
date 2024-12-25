@@ -8,4 +8,12 @@ class OrderItem
 
   embedded_in :order
   belongs_to :product
+
+  def product_name
+    product&.name
+  end
+
+  def product_category
+    product&.category
+  end
 end

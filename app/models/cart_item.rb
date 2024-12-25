@@ -12,6 +12,14 @@ class CartItem
     product&.name
   end
 
+  def product_category
+    product&.category
+  end
+
+  def product_dynamic_price
+    product&.dynamic_price
+  end
+
   def product_total_reserved
     product&.inventory[:total_reserved]
   end
@@ -20,7 +28,7 @@ class CartItem
     product&.inventory[:total_inventory]
   end
 
-  def product_total_price
-    product&.price.to_f * quantity
+  def subtotal
+    product&.dynamic_price.to_f * quantity
   end
 end
