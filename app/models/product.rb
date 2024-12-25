@@ -20,6 +20,8 @@ class Product
 
   field :inventory, type: Hash, default: { total_inventory: 0, total_reserved: 0 }
 
+  index({ name: 1, category: 1 }, { unique: true })
+
   validates :name, presence: true
   validates :name, uniqueness: { scope: :category }
   validates :category, presence: true

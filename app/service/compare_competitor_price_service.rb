@@ -24,6 +24,8 @@ class CompareCompetitorPriceService < ApplicationService
   end
 
   def find_my_product(name, category)
-    Product.where(name:, category:).first
+    Product.find_by(name:, category:)
+  rescue Mongoid::Errors::DocumentNotFound
+    nil
   end
 end
