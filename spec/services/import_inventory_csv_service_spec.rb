@@ -18,6 +18,7 @@ RSpec.describe ImportInventoryCsvService, type: :service do
       it "imports all products successfully" do
         result = subject.payload
 
+        expect(result.size).to eq(2)
         expect(result[0].name).to eq("Foo")
         expect(result[1].name).to eq("Bar")
         expect(result[0].category).to eq("Category 1")
@@ -26,6 +27,29 @@ RSpec.describe ImportInventoryCsvService, type: :service do
         expect(result[1].default_price).to eq(20.0)
         expect(result[0].inventory).to eq("total_inventory" => 100, "total_reserved" => 0)
         expect(result[1].inventory).to eq("total_inventory" => 200, "total_reserved" => 0)
+      end
+    end
+
+    context "when there is an existing product" do
+      let(:csv_file) do
+        Tempfile.new([ "test", ".csv" ]).tap do |f|
+          f.write("NAME,CATEGORY,DEFAULT_PRICE,QTY\n")
+          f.write("Foo,Category 1,10,100\n")
+          f.write("Bar,Category 2,20,200\n")
+          f.rewind
+        end
+      end
+
+      let!(:product) { create(:product, name: "Foo", category: "Category 1") }
+
+      it "returns status created (201)" do
+        result = subject.payload
+
+        expect(result.size).to eq(1)
+        expect(result[0].name).to eq("Bar")
+        expect(result[0].category).to eq("Category 2")
+        expect(result[0].default_price).to eq(20.0)
+        expect(result[0].inventory).to eq("total_inventory" => 200, "total_reserved" => 0)
       end
     end
 

@@ -21,15 +21,17 @@ class ImportInventoryCsvService < ApplicationService
     @csv.each_with_index do |row, index|
       next if index == 0 # skip headers
 
-      product = Product.create(
-        name: row[0],
-        category: row[1].to_s,
+      product = Product.find_or_initialize_by(name: row[0].to_s, category: row[1].to_s)
+      next if product.persisted?
+
+      product.assign_attributes(
         default_price: row[2].to_f,
         inventory: {
           total_inventory: row[3].to_i,
           total_reserved: 0
         }
       )
+      product.save!
       @products << product
     end
   end
