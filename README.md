@@ -4,17 +4,20 @@
 
 This e-commerce platform is built with **Ruby on Rails**, **MongoDB**, **Redis**, and **Sidekiq** to feature realtime price adjustments. The dynamic pricing engine adjusts product prices in real-time based on demand, inventory levels, and competitor pricing.
 
-### System Architecture
+## System Architecture
 
-Client: Sends requests to the API server.
+### Ruby on Rails API Server
+Handles client requests, processes business logic, and interacts with the MongoDB database for storing and retrieving persisted data.
 
-API Server: Handles requests, processes business logic, and interacts with MongoDB for data persistence.
+### MongoDB
+Document-based storage solution used to manage data like product and order data.
 
-Background Jobs: Runs via Sidekiq to ensure real-time updates to product prices.
+### Background Jobs
+Runs via Sidekiq and Redis to maintain real-time price updates and process recurring tasks like demand tracking and competitor price adjustments.
 
-### Dynamic Pricing
+## Dynamic Pricing
 
-The platform uses four pricing fields to determine product dynamic pricing:
+The platform uses 4 pricing fields to determine product dynamic pricing:
 - `default_price`: The base price of the product.
 - `demand_price`: Adjusted for products in high demand.
 - `inventory_price`: Adjusted for inventory levels.
@@ -22,23 +25,29 @@ The platform uses four pricing fields to determine product dynamic pricing:
 
 ### Dynamic Pricing Algorithm
 
-The dynamic price of a product is determined using the following conditions:
-- **High Demand**: Select the maximum price among `competitor_price`, `default_price`, and `demand_price` to increase profit margins.
-- **High Inventory**: Select the maximum price among `competitor_price`, `default_price`, `demand_pric`, and `inventory_price` to encourage sales.
-- **Low Inventory**: Select the maximum price among `competitor_price`, `default_price`, `demand_pric`, and `inventory_price` to optimize profitability.
-- **Default Case**: Select the maximum price `competitor_price` and `default_price`, to ensure profit margins.
+The dynamic price is determined using the following conditions:
+- **High Demand**: Select the maximum price among `competitor_price`, `default_price`, and `demand_price`.
+- **High Inventory**: Select the maximum price among `competitor_price`, `default_price`, `demand_pric`, and `inventory_price`.
+- **Low Inventory**: Select the maximum price among `competitor_price`, `default_price`, `demand_pric`, and `inventory_price`.
+- **Default Case**: Select the maximum price `competitor_price` and `default_price`.
 
 ### Background Jobs
 
 To ensure prices are updated in real-time, the platform relies on several background jobs:
 - `CompareSinatraPricingJob`: Runs hourly to update competitor prices by retrieving data from third-party APIs.
-- `MonitorHighInventoryJob`: Runs nightly to adjust inventory prices for high-inventory products to stimulate sales by lowering prices.
+- `MonitorHighInventoryJob`: Runs every midnight to adjust prices for high-inventory products, lowering prices to boost sales.
 - `TrackProductDemandJob`: Triggers on cart creation, adding items to a cart, or order creation to adjust demand and inventory prices.
 - `UpdatePrevDemandCountJob`: Runs every two hours to update historical demand data, determining whether a product remains in high demand.
 
-How to know if a product is in high demand?
+Q: How to know if a product is in high demand?
 
-High demand is identified by comparing `current_demand_count` and `previous_demand_count`. If the difference between the two values is greater than or equal to **5**, the product is considered in high demand. The `UpdatePrevDemandCountJob` updates the `previous_demand_count` from the `current_demand_count` to ensure accurate tracking of demand trends.
+The platform tracks product demand using two metrics:
+- `current_demand_count`: Tracks current demand for a product.
+- `previous_demand_count`: Reflects demand from a prior period.
+
+A product is considered in high demand if the `current_demand_count` is **≥60** (threshold) and the difference between `current_demand_count` and `previous_demand_count` is **≥5**.
+
+The `UpdatePrevDemandCountJob` updates the `previous_demand_count` from the `current_demand_count` to ensure accurate tracking of demand trends.
 
 ## API Documentation
 
@@ -161,8 +170,11 @@ Status: 201 Created
       "id": "BSON::ObjectId",
       "product_id": "BSON::ObjectId",
       "product_name": "Foo",
+      "product_category": "Test",
+      "product_dynamic_price": 100.0,
       "product_total_reserved": 0,
-      "product_total_inventory": 100,
+      "product_total_inventory": 50,
+      "subtotal": 100.0,
       "quantity": 1
     }
   ]
@@ -197,16 +209,22 @@ Status: 201 Created
       "id": "BSON::ObjectId",
       "product_id": "BSON::ObjectId",
       "product_name": "Foo",
+      "product_category": "Test",
+      "product_dynamic_price": 100.0,
       "product_total_reserved": 0,
-      "product_total_inventory": 100,
+      "product_total_inventory": 50,
+      "subtotal": 100.0,
       "quantity": 1,
     },
     {
       "id": "BSON::ObjectId",
       "product_id": "BSON::ObjectId",
       "product_name": "Bar",
+      "product_category": "Test",
+      "product_dynamic_price": 200.0,
       "product_total_reserved": 10,
       "product_total_inventory": 80,
+      "subtotal": 200.0,
       "quantity": 1,
     }
   ]
@@ -230,8 +248,11 @@ Status: 200 OK
     "id": "BSON::ObjectId",
     "product_id": "BSON::ObjectId",
     "product_name": "Foo",
+    "product_category": "Test",
+    "product_dynamic_price": 100.0,
     "product_total_reserved": 0,
     "product_total_inventory": 100,
+    "subtotal": 100.0,
     "quantity": 1,
   }
 }
@@ -265,12 +286,14 @@ Status: 201 Created
     {
       "product_id": "BSON::ObjectId",
       "product_name": "Foo",
+      "product_category": "Test",
       "quantity": 1,
       "price": 100.0
     },
     {
       "product_id": "BSON::ObjectId",
       "product_name": "Bar",
+      "product_category": "Test",
       "quantity": 1,
       "price": 120.0
     }
@@ -287,7 +310,17 @@ Status: 201 Created
    cd dynamic-pricing-engine
    ```
 
-2. Start the Application Using Docker Compose
+2. Set Up Master Key and Credentials
+  - Create a master.key file in the config directory.
+  - Ensure credentials.yml.enc exists and contains encrypted credentials.
+    ```
+    sinatra_pricing_api_key: ""
+    sidekiqweb:
+      username: ""
+      password: ""
+    ```
+
+3. Build and Run the Application
    ```
    docker compose up
 
@@ -297,7 +330,7 @@ Status: 201 Created
    ```
    This command will set up and run the application along with its dependencies.
 
-3. Access the Application
+4. Access the Application
    Open your terminal or [Postman](#api-documentation) to test the APIs.
 
 ### Testing

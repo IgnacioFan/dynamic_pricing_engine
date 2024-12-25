@@ -4,8 +4,7 @@ namespace :import_csv do
     file_path = args[:file_path]
     validate_file(file_path)
 
-    service = ImportInventoryCsvService.call(file_path)
-    puts service.payload
+    ImportInventoryCsvService.call(file_path)
   end
 
   def validate_file(file_path)
