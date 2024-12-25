@@ -42,7 +42,7 @@ High demand is identified by comparing `current_demand_count` and `previous_dema
 
 ## API Documentation
 
-Download and import [Dynamic-Pricing.postman_collection.json](/doc/Dynamic-Pricing.postman_collection.json) to help you test API mannually.
+If you use Postman, download and import [Dynamic-Pricing.postman_collection.json](/doc/Dynamic-Pricing.postman_collection.json) to help you test API mannually.
 
 ### `GET /api/v1/products`
 
@@ -298,7 +298,7 @@ Status: 201 Created
    This command will set up and run the application along with its dependencies.
 
 3. Access the Application
-   Open your browser and navigate to http://localhost:3000.
+   Open your terminal or [Postman](#api-documentation) to test the APIs.
 
 ### Testing
 1. Run Test Suite:
