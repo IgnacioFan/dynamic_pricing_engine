@@ -42,6 +42,8 @@ High demand is identified by comparing `current_demand_count` and `previous_dema
 
 ## API Documentation
 
+Download and import [Dynamic-Pricing.postman_collection.json](/doc/Dynamic-Pricing.postman_collection.json) to help you test API mannually.
+
 ### `GET /api/v1/products`
 
 Description: Lists all products with dynamic prices.
@@ -96,7 +98,7 @@ Status: 200 OK
 
 ### `POST /api/v1/products/import`
 
-Description: Imports product data via CSV file.
+Description: Imports product data via CSV file. [Sample CSV file](/doc/inventory.csv).
 
 #### Request
 ```
@@ -287,7 +289,11 @@ Status: 201 Created
 
 2. Start the Application Using Docker Compose
    ```
-   rails server
+   docker compose up
+
+   or
+
+   docker compose up --build
    ```
    This command will set up and run the application along with its dependencies.
 
@@ -297,11 +303,17 @@ Status: 201 Created
 ### Testing
 1. Run Test Suite:
    ```
-   rspec
+   make test
    ```
-2. Run Linting:
+
+2. Run individual Test :
    ```
-   rubocop
+   make test path="..."
+
+   or
+
+   make bash
+   rspec spec/...
    ```
 
 
