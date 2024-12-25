@@ -10,10 +10,10 @@ This e-commerce platform is built with **Ruby on Rails**, **MongoDB**, **Redis**
 Handles client requests, processes business logic, and interacts with the MongoDB database for storing and retrieving persisted data.
 
 ### MongoDB
-Document-based storage solution used to manage data like product and order data.
+Document-based storage used to manage data like product and order data.
 
 ### Background Jobs
-Runs via Sidekiq and Redis to maintain real-time price updates and process recurring tasks like demand tracking and competitor price adjustments.
+Runs via Sidekiq and Redis to maintain real-time price updates and process jobs like demand tracking and competitor price adjustments.
 
 ## Dynamic Pricing
 
@@ -33,15 +33,15 @@ The dynamic price is determined using the following conditions:
 
 ### Background Jobs
 
-To ensure prices are updated in real-time, the platform relies on several background jobs:
+To ensure prices are updated in real-time, the platform relies on the following background jobs:
 - `CompareSinatraPricingJob`: Runs hourly to update competitor prices by retrieving data from third-party APIs.
 - `MonitorHighInventoryJob`: Runs every midnight to adjust prices for high-inventory products, lowering prices to boost sales.
 - `TrackProductDemandJob`: Triggers on cart creation, adding items to a cart, or order creation to adjust demand and inventory prices.
 - `UpdatePrevDemandCountJob`: Runs every two hours to update historical demand data, determining whether a product remains in high demand.
 
-Q: How to know if a product is in high demand?
+**Q: How to know if a product is in high demand?**
 
-The platform tracks product demand using two metrics:
+The platform tracks product demand using 2 pointers:
 - `current_demand_count`: Tracks current demand for a product.
 - `previous_demand_count`: Reflects demand from a prior period.
 
