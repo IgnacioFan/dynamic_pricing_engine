@@ -8,6 +8,8 @@ services:
       - 27017:27017
     volumes:
       - mongo-data:/data/db
+    networks:
+      - dpe
 
   redis:
     container_name: redis
@@ -16,8 +18,48 @@ services:
       - 6379:6379
     volumes:
       - redis-data:/data
+    networks:
+      - dpe
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: api
+    environment:
+      REDIS_URL: redis://redis:7372/0
+      SIDEKID_URL: redis://redis:6379/0
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/rails
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - dpe
+
+  sidekiq:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: sidekiq
+    environment:
+      SIDEKID_URL: redis://redis:6379/0
+    volumes:
+      - .:/rails
+    tty: true
+    command: ["bundle", "exec", "sidekiq"]
+    depends_on:
+      - redis
+      - api
+    networks:
+      - dpe
 
 volumes:
   mongo-data:
   redis-data:
 
+networks:
+  dpe:
+    driver: bridge

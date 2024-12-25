@@ -29,6 +29,7 @@ Rails.application.routes.draw do
     end
   end
 
+  root to: "errors#route_not_found"
   # Catch-all route for unmatched routes
   match "*unmatched", to: "errors#route_not_found", via: :all
 end
