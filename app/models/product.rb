@@ -45,11 +45,6 @@ class Product
     self.total_reserved + quantity <= self.total_inventory
   end
 
-  def update_current_demand_count(quantity)
-    self.current_demand_count = ((self.total_reserved + quantity.to_f)/self.total_inventory * 100).ceil
-    save!
-  end
-
   def high_demand_product?
     return false if current_demand_count < HIGH_DEMAND_BAR
     current_demand_count - previous_demand_count >= 5
@@ -105,5 +100,12 @@ class Product
         ]
       }
     )
+  end
+
+  def self.trigger_track_product_demand_jobs(product_ids)
+    return if Rails.env.test?
+    product_ids.each do |id|
+      TrackProductDemandJob.perform_async(id)
+    end
   end
 end

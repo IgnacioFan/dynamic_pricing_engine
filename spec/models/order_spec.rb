@@ -56,5 +56,31 @@ RSpec.describe Order, type: :model do
         expect(error).to eq('Cart is empty')
       end
     end
+
+    context "when multiple threads place orders simultaneously" do
+      it "handles race conditions when two orders update the same product" do
+        threads = []
+        errors = []
+
+        5.times do
+          threads << Thread.new do
+            begin
+              Order.place_order!(cart.id)
+            rescue => e
+              errors << e.message
+            end
+          end
+        end
+
+        # Wait for 5 threads to complete
+        threads.each(&:join)
+
+        product.reload
+
+        expect(product.total_reserved).to eq(2)
+        expect(product.current_demand_count).to eq(((product.total_reserved.to_f / product.total_inventory) * 100).ceil)
+        expect(errors).to be_empty
+      end
+    end
   end
 end

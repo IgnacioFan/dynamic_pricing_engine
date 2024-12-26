@@ -54,7 +54,21 @@ class Order
         )
         totals[:price] += product.dynamic_price * item.quantity
         totals[:quantity] += item.quantity
-        caches[product] = item.quantity
+
+        new_demand_count = ((product.total_reserved + item.quantity.to_f)/product.total_inventory * 100).ceil
+        new_total_reserved = product.total_reserved + item.quantity
+
+        caches[product.id.to_s] = {
+          update_one: {
+            filter: { _id: product.id },
+            update: {
+              "$set" => {
+                "current_demand_count" => new_demand_count,
+                "total_reserved" => new_total_reserved
+              }
+            }
+          }
+        }
       else
         errors << "Product #{product.name} (ID: #{item.product_id}) is insufficient"
       end
@@ -66,19 +80,11 @@ class Order
   def self.store_order(order, totals, caches)
     order.assign_attributes(total_price: totals[:price], total_quantity: totals[:quantity])
 
-    if order.save!
-      update_inventory_and_trigger_jobs(caches)
+    if Product.collection.bulk_write(caches.values).acknowledged? && order.save!
+      Product.trigger_track_product_demand_jobs(caches.keys)
       [ order, nil ]
     else
       [ nil, "Failed to save order" ]
-    end
-  end
-
-  def self.update_inventory_and_trigger_jobs(caches)
-    caches.each do |product, quantity|
-      product.total_reserved += quantity
-      product.update_current_demand_count(quantity)
-      TrackProductDemandJob.perform_async(product.id.to_s) unless Rails.env.test?
     end
   end
 end

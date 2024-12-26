@@ -48,23 +48,29 @@ class AddItemsToCartService < ApplicationService
         next
       end
 
-      caches[product] = item[:quantity]
       cart_item = cart.cart_items.find_or_initialize_by(product_id: product.id)
       cart_item.quantity = item[:quantity]
+
+      new_demand_count = ((product.total_reserved + item[:quantity].to_f)/product.total_inventory * 100).ceil
+      caches[product.id.to_s] = {
+        update_one: {
+          filter: { _id: product.id },
+          update: {
+            "$set" => {
+              "current_demand_count" => new_demand_count
+            }
+          }
+        }
+      }
     end
 
     return failure(errors.join(", ")) if errors.any?
 
-    if cart.save!
-      update_product_frequencies
-    end
-    nil
-  end
-
-  def update_product_frequencies
-    caches.each do |product, quantity|
-      product.update_current_demand_count(quantity)
-      TrackProductDemandJob.perform_async(product.id.to_s) if !Rails.env.test?
+    if Product.collection.bulk_write(caches.values).acknowledged? && cart.save!
+      Product.trigger_track_product_demand_jobs(caches.keys)
+      nil
+    else
+      "Failed to save cart"
     end
   end
 end
