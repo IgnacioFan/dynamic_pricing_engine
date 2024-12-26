@@ -31,7 +31,7 @@ gem "bootsnap", require: false
 gem "mongoid", "~> 9.0"
 gem "httparty", "~> 0.22"
 gem "sidekiq", "~> 7.3"
-gem "sidekiq-cron"
+gem "sidekiq-cron", "2.0.1"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -48,5 +48,6 @@ group :test do
   gem "rspec"
   gem "rspec-rails"
   gem "factory_bot_rails"
-  gem "rspec-rails"
+  gem "vcr"
+  gem "webmock"
 end

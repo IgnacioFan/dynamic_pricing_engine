@@ -56,7 +56,7 @@ class Order
         totals[:quantity] += item.quantity
         caches[product] = item.quantity
       else
-        errors << "Product #{product.name} (ID: #{item.product_id}) is unavailable"
+        errors << "Product #{product.name} (ID: #{item.product_id}) is insufficient"
       end
     end
 

@@ -18,23 +18,23 @@ RSpec.describe Order, type: :model do
       end
     end
 
-    context 'when a product is unavailable' do
+    context "when product inventory is insufficient" do
+      let(:cart_item) { build(:cart_item, product:, quantity: 11) }
+
+      it 'returns an error' do
+        order, error = described_class.place_order!(cart.id)
+        expect(order).to be_nil
+        expect(error).to eq("Product #{product.name} (ID: #{product.id}) is insufficient")
+      end
+    end
+
+    context 'when the order has been created' do
       before { create(:order, cart: cart) }
 
       it 'returns an error' do
         order, error = described_class.place_order!(cart.id)
         expect(order).to be_nil
         expect(error).to eq("Order has been created")
-      end
-    end
-
-    context 'when a product is unavailable' do
-      let(:product) { create(:product, inventory: { total_inventory: 10, total_reserved: 9 }) }
-
-      it 'returns an error' do
-        order, error = described_class.place_order!(cart.id)
-        expect(order).to be_nil
-        expect(error).to eq("Product #{product.name} (ID: #{product.id}) is unavailable")
       end
     end
 
