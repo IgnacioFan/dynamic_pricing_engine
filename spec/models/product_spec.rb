@@ -10,21 +10,21 @@ RSpec.describe Product, type: :model do
     end
 
     context "When product is in high inventory" do
-      let!(:product) { create(:product, inventory_price: 95, competitor_price: 99, inventory: { total_inventory: 100, total_reserved: 10 }) }
+      let!(:product) { create(:product, inventory_price: 95, competitor_price: 99, total_inventory: 100, total_reserved: 10) }
       it "returns the lowest price" do
         expect(product.dynamic_price).to eq(95.0)
       end
     end
 
     context "When product is in low inventory" do
-      let!(:product) { create(:product, inventory_price: 105, competitor_price: 102, inventory: { total_inventory: 100, total_reserved: 81 }) }
+      let!(:product) { create(:product, inventory_price: 105, competitor_price: 102, total_inventory: 100, total_reserved: 81) }
       it "returns the highest price" do
         expect(product.dynamic_price).to eq(105.0)
       end
     end
 
     context "When product is stable" do
-      let!(:product) { create(:product, competitor_price: 102, inventory: { total_inventory: 100, total_reserved: 50 }) }
+      let!(:product) { create(:product, competitor_price: 102, total_inventory: 100, total_reserved: 50) }
       it "returns the highest price" do
         expect(product.dynamic_price).to eq(102.0)
       end
@@ -32,7 +32,7 @@ RSpec.describe Product, type: :model do
   end
 
   describe '#available_inventory?' do
-    let(:product) { create(:product, inventory: { total_inventory: 10, total_reserved: 5 }) }
+    let(:product) { create(:product, total_inventory: 10, total_reserved: 5) }
 
     context 'when the inventory is sufficient' do
       it { expect(product.available_inventory?(3)).to be true }
@@ -69,32 +69,32 @@ RSpec.describe Product, type: :model do
 
   describe "#low_inventory_level?" do
     context "inventory level is below low bar" do
-      let(:product) { build(:product, inventory: { total_inventory: 100, total_reserved: 90 }) }
+      let(:product) { build(:product, total_inventory: 100, total_reserved: 90) }
       it { expect(product.low_inventory_level?).to be(true) }
     end
 
     context "inventory level is above low bar" do
-      let(:product) { build(:product, inventory: { total_inventory: 100, total_reserved: 10 }) }
+      let(:product) { build(:product, total_inventory: 100, total_reserved: 10) }
       it { expect(product.low_inventory_level?).to be(false) }
     end
   end
 
   describe "#high_inventory_level?" do
     context "inventory level is above high bar" do
-      let(:product) { build(:product, inventory: { total_inventory: 100, total_reserved: 10 }) }
+      let(:product) { build(:product, total_inventory: 100, total_reserved: 10) }
       it { expect(product.high_inventory_level?).to be(true) }
     end
 
     context "inventory level is below high bar" do
-      let(:product) { build(:product, inventory: { total_inventory: 100, total_reserved: 70 }) }
+      let(:product) { build(:product, total_inventory: 100, total_reserved: 70) }
       it { expect(product.high_inventory_level?).to be(false) }
     end
   end
 
   describe '.high_inventory_products' do
-    let!(:high_inventory_product) { create(:product, name: "high", inventory: { total_inventory: 100, total_reserved: 10 }) }
-    let!(:low_inventory_product) { create(:product, name: "low", inventory: { total_inventory: 100, total_reserved: 30 }) }
-    let!(:empty_inventory_product) { create(:product, name: "empty", inventory: { total_inventory: 0, total_reserved: 0 }) }
+    let!(:high_inventory_product) { create(:product, name: "high", total_inventory: 100, total_reserved: 10) }
+    let!(:low_inventory_product) { create(:product, name: "low", total_inventory: 100, total_reserved: 30) }
+    let!(:empty_inventory_product) { create(:product, name: "empty", total_inventory: 0, total_reserved: 0) }
 
     it 'returns high inventory products' do
       result = Product.high_inventory_products

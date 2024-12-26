@@ -33,7 +33,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
 
     context "when the product inventory is low" do
       context "when inventory_price is nil" do
-        let!(:product) { create(:product, default_price: 100.0, inventory: { total_inventory: 100, total_reserved: 90 }) }
+        let!(:product) { create(:product, default_price: 100.0, total_inventory: 100, total_reserved: 90) }
 
         it "increases the product inventory price" do
           result = service.payload
@@ -42,7 +42,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
       end
 
       context "when inventory_price is not nil" do
-        let!(:product) { create(:product, inventory_price: 110.0, inventory: { total_inventory: 100, total_reserved: 90 }) }
+        let!(:product) { create(:product, inventory_price: 110.0, total_inventory: 100, total_reserved: 90) }
 
         it "increases the product inventory price" do
           result = service.payload
@@ -53,7 +53,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
 
     context "when the product inventory is high" do
       context "when inventory_price is nil" do
-        let!(:product) { create(:product, default_price: 100.0, inventory: { total_inventory: 100, total_reserved: 10 }) }
+        let!(:product) { create(:product, default_price: 100.0, total_inventory: 100, total_reserved: 10) }
 
         it "decreases the inventory price" do
           result = service.payload
@@ -62,7 +62,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
       end
 
       context "when inventory_price is nil" do
-        let!(:product) { create(:product, inventory_price: 90.0, inventory: { total_inventory: 100, total_reserved: 10 }) }
+        let!(:product) { create(:product, inventory_price: 90.0, total_inventory: 100, total_reserved: 10) }
 
         it "decreases the inventory price" do
           result = service.payload
@@ -72,7 +72,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
     end
 
     context "when the product inventory is high and the price reaches the bottom line" do
-      let!(:product) { create(:product, inventory_price: 60.0, inventory: { total_inventory: 100, total_reserved: 10 }) }
+      let!(:product) { create(:product, inventory_price: 60.0, total_inventory: 100, total_reserved: 10) }
 
       it "decreases the inventory price" do
         result = service.payload

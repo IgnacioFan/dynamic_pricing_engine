@@ -9,8 +9,8 @@ RSpec.describe MonitorHighInventoryJob, type: :job do
 
   describe "#perform" do
     context "when there is low inventory products" do
-      let!(:low_inventory_product) { create(:product, name: "low inventory", inventory: { total_inventory: 100, total_reserved: 90 }) }
-      let!(:high_inventory_product) { create(:product, name: "high inventory", inventory: { total_inventory: 100, total_reserved: 10 }) }
+      let!(:low_inventory_product) { create(:product, name: "low inventory", total_inventory: 100, total_reserved: 90) }
+      let!(:high_inventory_product) { create(:product, name: "high inventory", total_inventory: 100, total_reserved: 10) }
 
       it "filters high inventory products" do
         MonitorHighInventoryJob.new.perform

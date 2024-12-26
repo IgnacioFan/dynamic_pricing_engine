@@ -25,8 +25,10 @@ RSpec.describe ImportInventoryCsvService, type: :service do
         expect(result[1].category).to eq("Category 2")
         expect(result[0].default_price).to eq(10.0)
         expect(result[1].default_price).to eq(20.0)
-        expect(result[0].inventory).to eq("total_inventory" => 100, "total_reserved" => 0)
-        expect(result[1].inventory).to eq("total_inventory" => 200, "total_reserved" => 0)
+        expect(result[0].total_inventory).to eq(100)
+        expect(result[1].total_inventory).to eq(200)
+        expect(result[0].total_reserved).to eq(0)
+        expect(result[1].total_reserved).to eq(0)
       end
     end
 
@@ -49,7 +51,8 @@ RSpec.describe ImportInventoryCsvService, type: :service do
         expect(result[0].name).to eq("Bar")
         expect(result[0].category).to eq("Category 2")
         expect(result[0].default_price).to eq(20.0)
-        expect(result[0].inventory).to eq("total_inventory" => 200, "total_reserved" => 0)
+        expect(result[0].total_inventory).to eq(200)
+        expect(result[0].total_reserved).to eq(0)
       end
     end
 

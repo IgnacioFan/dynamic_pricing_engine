@@ -8,12 +8,8 @@ FactoryBot.define do
     current_demand_count { 0 }
     previous_demand_count { 0 }
 
-    inventory {
-      {
-        total_inventory: 100,
-        total_reserved: 0
-      }
-    }
+    total_inventory { 100 }
+    total_reserved { 0 }
 
     created_at { Time.now.utc }
     updated_at { Time.now.utc }

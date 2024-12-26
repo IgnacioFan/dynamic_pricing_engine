@@ -26,10 +26,7 @@ class ImportInventoryCsvService < ApplicationService
 
       product.assign_attributes(
         default_price: row[2].to_f,
-        inventory: {
-          total_inventory: row[3].to_i,
-          total_reserved: 0
-        }
+        total_inventory: row[3].to_i,
       )
       product.save!
       @products << product

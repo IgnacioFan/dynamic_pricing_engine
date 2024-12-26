@@ -21,11 +21,11 @@ class CartItem
   end
 
   def product_total_reserved
-    product&.inventory[:total_reserved]
+    product&.total_reserved
   end
 
   def product_total_inventory
-    product&.inventory[:total_inventory]
+    product&.total_inventory
   end
 
   def subtotal

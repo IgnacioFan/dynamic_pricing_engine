@@ -14,11 +14,12 @@ class Product
   field :demand_price, type: BigDecimal
   field :inventory_price, type: BigDecimal
 
+  field :total_inventory, type: Integer, default: 0
+  field :total_reserved, type: Integer, default: 0
+
   # use current_demand_count and previous_demand_count to track if the product is high in demand
   field :current_demand_count, type: Integer, default: 0
   field :previous_demand_count, type: Integer, default: 0
-
-  field :inventory, type: Hash, default: { total_inventory: 0, total_reserved: 0 }
 
   index({ name: 1, category: 1 }, { unique: true })
 
@@ -41,12 +42,11 @@ class Product
   def available_inventory?(quantity)
     return false if quantity <= 0
 
-    total_reserved = inventory[:total_reserved] + quantity
-    total_reserved <= inventory[:total_inventory]
+    self.total_reserved + quantity <= self.total_inventory
   end
 
   def update_current_demand_count(quantity)
-    self.current_demand_count = ((self.inventory[:total_reserved] + quantity.to_f)/self.inventory[:total_inventory] * 100).ceil
+    self.current_demand_count = ((self.total_reserved + quantity.to_f)/self.total_inventory * 100).ceil
     save!
   end
 
@@ -56,16 +56,16 @@ class Product
   end
 
   def low_inventory_level?
-    total_inventory = inventory[:total_inventory].to_f
-    total_reserved = inventory[:total_reserved].to_f
+    total_inventory = self.total_inventory.to_f
+    total_reserved = self.total_reserved.to_f
     return false if total_inventory.zero?
 
     (total_inventory - total_reserved) / total_inventory < INVENTORY_LOW_BAR
   end
 
   def high_inventory_level?
-    total_inventory = inventory[:total_inventory].to_f
-    total_reserved = inventory[:total_reserved].to_f
+    total_inventory = self.total_inventory.to_f
+    total_reserved = self.total_reserved.to_f
     return false if total_inventory.zero?
 
     (total_inventory - total_reserved) / total_inventory > INVENTORY_HIGH_BAR
@@ -73,16 +73,16 @@ class Product
 
   def self.high_inventory_products
     Product.where(
-      :"inventory.total_inventory".gt => 0,
+      :"total_inventory".gt => 0,
       :$expr => {
         :$gt => [
           { :$divide => [
               { :$subtract => [
-                "$inventory.total_inventory",
-                "$inventory.total_reserved"
+                "$total_inventory",
+                "$total_reserved"
                 ]
               },
-              "$inventory.total_inventory"
+              "$total_inventory"
             ]
           },
           INVENTORY_HIGH_BAR
