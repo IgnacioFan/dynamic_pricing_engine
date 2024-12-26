@@ -3,30 +3,37 @@ require 'rails_helper'
 RSpec.describe Product, type: :model do
   describe '#dynamic_price' do
     context "When product is in high inventory" do
-      let!(:product) { create(:product, default_price: 100, competitor_price: 102, inventory_level: :high, demand_level: :low) }
+      let!(:product) { create(:product, default_price: 100, inventory_level: :high, demand_level: :low) }
       it "returns the lowest price" do
         expect(product.calculate_dynamic_price).to eq(95.0)
       end
     end
 
     context "When product is in medium inventory" do
-      let!(:product) { create(:product, default_price: 100, competitor_price: 102, inventory_level: :medium, demand_level: :low) }
+      let!(:product) { create(:product, default_price: 100, inventory_level: :medium, demand_level: :low) }
       it "returns the lowest price" do
         expect(product.calculate_dynamic_price).to eq(100.0)
       end
     end
 
     context "When product is in low inventory" do
-      let!(:product) { create(:product, default_price: 100, competitor_price: 102, inventory_level: :low, demand_level: :low) }
+      let!(:product) { create(:product, default_price: 100, inventory_level: :low, demand_level: :low) }
       it "returns the highest price" do
         expect(product.calculate_dynamic_price).to eq(105.0)
       end
     end
 
     context "When product is in high demand" do
-      let!(:product) { create(:product, default_price: 100, competitor_price: 102, inventory_level: :low, demand_level: :high) }
+      let!(:product) { create(:product, default_price: 100, inventory_level: :low, demand_level: :high) }
       it "returns the highest price" do
         expect(product.calculate_dynamic_price).to eq(110.0)
+      end
+    end
+
+    context "When product price is above the competitor price" do
+      let!(:product) { create(:product, default_price: 100, competitor_price: 108, inventory_level: :low, demand_level: :high) }
+      it "returns the highest price" do
+        expect(product.calculate_dynamic_price).to eq(108.0)
       end
     end
 

@@ -9,7 +9,9 @@ class Product
   DEMAND_PRICE_INCR_RATE = 0.05.freeze
   INVENTORY_PRICE_INCR_RATE = 0.05.freeze
   INVENTORY_PRICE_DECR_RATE = 0.05.freeze
+
   DEFAULT_PRICE_FLOOR_RATE = 0.5.freeze
+  DEFAULT_PRICE_CEIL_RATE = 1.5.freeze
 
   field :name, type: String
   field :category, type: String
@@ -17,6 +19,7 @@ class Product
   field :competitor_price, type: BSON::Decimal128
   field :default_price, type: BSON::Decimal128
   field :dynamic_price, type: BSON::Decimal128
+
   field :price_floor, type: BSON::Decimal128
 
   field :inventory_level, type: Symbol, default: :high
@@ -44,10 +47,12 @@ class Product
   def calculate_dynamic_price
     inventory_price = case inventory_level
     when :high
+      # decrease the price if the product's inventory level is high
       dynamic_price - (default_price * INVENTORY_PRICE_DECR_RATE)
     when :medium
       dynamic_price
     when :low
+      # increase the price if the product's inventory level is low
       dynamic_price + (default_price * INVENTORY_PRICE_INCR_RATE)
     end
     # prevent the dynamic price from lowering the price floor
@@ -55,13 +60,16 @@ class Product
       inventory_price = dynamic_price
     end
 
-    self.dynamic_price = if high_demand?
-      [ competitor_price, inventory_price + (default_price * DEMAND_PRICE_INCR_RATE), default_price ].compact.max
+    demand_adjusted_price = if high_demand?
+      # increase the price if the product is frequently added to carts or placed order
+      [ inventory_price + (default_price * DEMAND_PRICE_INCR_RATE), default_price ].compact.max
     elsif low_demand_low_inventory?
-      [ competitor_price, inventory_price, default_price ].compact.max
+      [ inventory_price, default_price ].compact.max
     else
-      [ competitor_price, inventory_price, default_price ].compact.min
+      [ inventory_price, default_price ].compact.min
     end
+
+    self.dynamic_price = [ demand_adjusted_price, competitor_price ].compact.min
   end
 
   def set_inventory_level
