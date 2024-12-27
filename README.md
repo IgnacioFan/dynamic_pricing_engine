@@ -17,37 +17,46 @@ Runs via Sidekiq and Redis to maintain real-time price updates and process jobs 
 
 ## Dynamic Pricing
 
-The platform uses 4 pricing fields to determine product dynamic pricing:
+The platform adjusts product pricing based on demand, inventory levels, and competitor pricing. The following fields are used in the pricing process:
+
 - `default_price`: The base price of the product.
-- `demand_price`: Adjusted for products in high demand.
-- `inventory_price`: Adjusted for inventory levels.
-- `competitor_price`: Based on competitor product pricing.
+- `dynamic_price`: The adjusted price based on demand and inventory levels.
+- `competitor_price`: Pricing data from competitors.
+- `price_floor`: The minimum price for the product.
 
 ### Dynamic Pricing Algorithm
 
-The dynamic price is determined using the following conditions:
-- **High Demand**: Select the maximum price among `competitor_price`, `default_price`, and `demand_price`.
-- **High Inventory**: Select the maximum price among `competitor_price`, `default_price`, `demand_pric`, and `inventory_price`.
-- **Low Inventory**: Select the maximum price among `competitor_price`, `default_price`, `demand_pric`, and `inventory_price`.
-- **Default Case**: Select the maximum price `competitor_price` and `default_price`.
+The `dynamic_price` is calculated considering the following factors:
+
+#### step 1: Inventory Levels:
+  - Prices are adjusted according to the inventory level: decreased for high inventory, increased for low inventory, and unchanged for medium inventory.
+  - The adjusted price will not drop below the `price_floor`.
+
+#### step 2: Demand Levels:
+  - High demand leads to an increase in price.
+  - For low demand: Products with low inventory maintain higher pricing; Products with high inventory prioritize lower pricing.
+
+#### step 3: Competitor Pricing:
+  - The final price is capped by the lower of the adjusted price and the `competitor_price`.
+
+The adjusted `dynamic_price` is valid for **3 hours** to ensure price stability and prevent rapid fluctuations.
 
 ### Background Jobs
 
 To ensure prices are updated in real-time, the platform relies on the following background jobs:
 - `CompareSinatraPricingJob`: Runs hourly to update competitor prices by retrieving data from third-party APIs.
-- `MonitorHighInventoryJob`: Runs every midnight to adjust prices for high-inventory products, lowering prices to boost sales.
+- `MonitorHighInventoryJob`: Runs every midnight to identify and reduce prices for high-inventory products, encouraging sales.
 - `TrackProductDemandJob`: Triggers on cart creation, adding items to a cart, or order creation to adjust demand and inventory prices.
-- `UpdatePrevDemandCountJob`: Runs every two hours to update historical demand data, determining whether a product remains in high demand.
+- `UpdatePrevDemandCountJob`: Runs every three hours to update historical demand data for high-demand products.
 
-**Q: How to know if a product is in high demand?**
+### High-Demand Tracking
 
-The platform tracks product demand using 2 pointers:
-- `current_demand_count`: Tracks current demand for a product.
-- `previous_demand_count`: Reflects demand from a prior period.
+Products are classified as high demand if they frequently appear in carts or orders. The system uses two fields to track demand trends:
 
-A product is considered in high demand if the `current_demand_count` is **≥60** (threshold) and the difference between `current_demand_count` and `previous_demand_count` is **≥5**.
+- `current_demand_count`: Increments when a product is added to a cart or an order is created.
+- `previous_demand_count`: Represents the highest demand count historically.
 
-The `UpdatePrevDemandCountJob` updates the `previous_demand_count` from the `current_demand_count` to ensure accurate tracking of demand trends.
+The `UpdatePrevDemandCountJob` ensures the `previous_demand_count` is always updated for high-demand products to reflect maximum historical demand.
 
 ## API Documentation
 
