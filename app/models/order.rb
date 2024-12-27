@@ -2,12 +2,21 @@ class Order
   include Mongoid::Document
   include Mongoid::Timestamps
 
+  PENDING = "pending".freeze
+  CONFIRMED = "confirmed".freeze
+  CANCELLED = "cancelled".freeze
+  FAILED = "failed".freeze
+
+  field :order_status, type: String, default: PENDING
+
   field :cart_id, type: BSON::ObjectId
-  field :total_price, type: BigDecimal
+  field :total_price, type: BSON::Decimal128
   field :total_quantity, type: Integer
 
   embeds_many :order_items
   belongs_to :cart, class_name: "Cart", inverse_of: :order
+
+  validates :order_status, inclusion: { in: [ PENDING, CONFIRMED, CANCELLED, FAILED ] }
 
   def self.place_order!(cart_id)
     cart = find_cart(cart_id)
