@@ -3,7 +3,7 @@ class OrderItem
   include Mongoid::Timestamps
 
   field :product_id, type: BSON::ObjectId
-  field :price, type: BigDecimal
+  field :price, type: BSON::Decimal128
   field :quantity, type: Integer, default: 0
 
   embedded_in :order

@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe "Products API", type: :request do
   describe "GET /api/v1/products" do
-    let(:product_1) { build(:product, name: "Foo", dynamic_price: 100, total_inventory: 100, total_reserved: 0) }
-    let(:product_2) { build(:product, name: "Bar", dynamic_price: 200, total_inventory: 200, total_reserved: 0) }
+    let(:product_1) { build(:product, name: "Foo", dynamic_price: 100.0, total_inventory: 100, total_reserved: 0) }
+    let(:product_2) { build(:product, name: "Bar", dynamic_price: 200.0, total_inventory: 200, total_reserved: 0) }
 
     before { allow(Product).to receive(:all).and_return([ product_1, product_2 ]) }
 
@@ -24,7 +24,7 @@ RSpec.describe "Products API", type: :request do
   end
 
   describe "GET /api/v1/products/:id" do
-    let(:product) { build(:product, name: "Foo", dynamic_price: 100, total_inventory: 100, total_reserved: 0) }
+    let(:product) { build(:product, name: "Foo", dynamic_price: 100.0, total_inventory: 100, total_reserved: 0) }
 
     before { allow(Product).to receive(:find).and_return(product) }
 
@@ -44,8 +44,8 @@ RSpec.describe "Products API", type: :request do
   describe "POST /api/v1/products/import" do
     let(:file_format) { 'text/csv' }
     let(:csv_file) { fixture_file_upload('valid_inventory.csv', file_format) }
-    let(:product_1) { build(:product, name: "Foo", dynamic_price: 100, total_inventory: 100, total_reserved: 0) }
-    let(:product_2) { build(:product, name: "Bar", dynamic_price: 200, total_inventory: 200, total_reserved: 0) }
+    let(:product_1) { build(:product, name: "Foo", dynamic_price: 100.0, total_inventory: 100, total_reserved: 0) }
+    let(:product_2) { build(:product, name: "Bar", dynamic_price: 200.0, total_inventory: 200, total_reserved: 0) }
     let(:service_result) { double(success?: true, payload: [ product_1, product_2 ]) }
 
     before { allow(ImportInventoryCsvService).to receive(:call).and_return(service_result) }

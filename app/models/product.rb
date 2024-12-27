@@ -1,17 +1,15 @@
 class Product
   include Mongoid::Document
   include Mongoid::Timestamps
-
+  # For inventory_level field
   INVENTORY_LOW_BAR = 0.2.freeze
   INVENTORY_HIGH_BAR = 0.8.freeze
-  HIGH_DEMAND_BAR = 60.freeze
-
+  # For dynamic_price field
   DEMAND_PRICE_INCR_RATE = 0.05.freeze
   INVENTORY_PRICE_INCR_RATE = 0.05.freeze
   INVENTORY_PRICE_DECR_RATE = 0.05.freeze
-
+  # For price_floor field
   DEFAULT_PRICE_FLOOR_RATE = 0.5.freeze
-  DEFAULT_PRICE_CEIL_RATE = 1.5.freeze
 
   field :name, type: String
   field :category, type: String
@@ -19,6 +17,7 @@ class Product
   field :competitor_price, type: BSON::Decimal128
   field :default_price, type: BSON::Decimal128
   field :dynamic_price, type: BSON::Decimal128
+  field :dynamic_price_expried_at, type: DateTime, default: -> { Time.now.utc + 3.hours }
 
   field :price_floor, type: BSON::Decimal128
 
@@ -43,6 +42,8 @@ class Product
   before_save :set_price_floor, :set_default_dynamic_price
 
   def calculate_dynamic_price
+    return dynamic_price if Time.now.utc <= dynamic_price_expried_at
+
     inventory_price = case inventory_level
     when :high
       # decrease the price if the product's inventory level is high
@@ -67,6 +68,7 @@ class Product
       [ inventory_price, default_price ].compact.min
     end
 
+    self.dynamic_price_expried_at = Time.now.utc + 3.hours
     self.dynamic_price = [ demand_adjusted_price, competitor_price ].compact.min
   end
 
@@ -123,22 +125,6 @@ class Product
             ]
           },
           INVENTORY_HIGH_BAR
-        ]
-      }
-    )
-  end
-
-  def self.high_demand_products
-    Product.where(
-      :"current_demand_count".gt => HIGH_DEMAND_BAR,
-      :$expr => {
-        :$gte => [
-          {
-            :$subtract => [
-              "$current_demand_count",
-              "$previous_demand_count"
-            ]
-          }, 5
         ]
       }
     )

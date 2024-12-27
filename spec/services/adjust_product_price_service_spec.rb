@@ -4,6 +4,8 @@ RSpec.describe AdjustProductPriceService, type: :service do
   let(:service) { described_class.call(product.id) }
 
   describe ".call" do
+    let(:dynamic_price_expried_at) { 3.hours.ago.utc }
+
     context "when the product is not found" do
       it "returns an error" do
         result = described_class.call(9999)
@@ -20,7 +22,8 @@ RSpec.describe AdjustProductPriceService, type: :service do
             current_demand_count: 5,
             previous_demand_count: 1,
             total_inventory: 100,
-            total_reserved: 10
+            total_reserved: 10,
+            dynamic_price_expried_at:
           )
         end
 
@@ -40,7 +43,8 @@ RSpec.describe AdjustProductPriceService, type: :service do
             current_demand_count: 5,
             previous_demand_count: 1,
             total_inventory: 100,
-            total_reserved: 50
+            total_reserved: 50,
+            dynamic_price_expried_at:
           )
         end
 
@@ -60,7 +64,8 @@ RSpec.describe AdjustProductPriceService, type: :service do
             current_demand_count: 5,
             previous_demand_count: 1,
             total_inventory: 100,
-            total_reserved: 90
+            total_reserved: 90,
+            dynamic_price_expried_at:
           )
         end
 
@@ -82,7 +87,8 @@ RSpec.describe AdjustProductPriceService, type: :service do
             current_demand_count: 0,
             previous_demand_count: 10,
             total_inventory: 100,
-            total_reserved: 10
+            total_reserved: 10,
+            dynamic_price_expried_at:
           )
         end
 
@@ -102,7 +108,8 @@ RSpec.describe AdjustProductPriceService, type: :service do
             current_demand_count: 0,
             previous_demand_count: 10,
             total_inventory: 100,
-            total_reserved: 50
+            total_reserved: 50,
+            dynamic_price_expried_at:
           )
         end
 
@@ -122,7 +129,8 @@ RSpec.describe AdjustProductPriceService, type: :service do
             current_demand_count: 0,
             previous_demand_count: 10,
             total_inventory: 100,
-            total_reserved: 90
+            total_reserved: 90,
+            dynamic_price_expried_at:
           )
         end
 
@@ -144,7 +152,8 @@ RSpec.describe AdjustProductPriceService, type: :service do
           current_demand_count: 0,
           previous_demand_count: 10,
           total_inventory: 100,
-          total_reserved: 10
+          total_reserved: 10,
+          dynamic_price_expried_at:
         )
       end
 

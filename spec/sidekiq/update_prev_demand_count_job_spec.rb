@@ -1,11 +1,12 @@
 require 'rails_helper'
+require 'sidekiq/testing'
 
 RSpec.describe UpdatePrevDemandCountJob, type: :job do
   before { Sidekiq::Testing.fake! }
 
   context "when there is a high demand product" do
-    let!(:high_demand_product) { create(:product, name: "high demand", current_demand_count: 70, previous_demand_count: 60) }
-    let!(:low_demand_product) { create(:product, name: "low demand", current_demand_count: 50, previous_demand_count: 45) }
+    let!(:high_demand_product) { create(:product, name: "high demand", demand_level: :high, current_demand_count: 70, previous_demand_count: 60) }
+    let!(:low_demand_product) { create(:product, name: "low demand", demand_level: :low, current_demand_count: 50, previous_demand_count: 45) }
 
     let(:subjuct) { described_class.new.perform }
 
