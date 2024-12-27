@@ -4,7 +4,7 @@ compare_sinatra_pricing:
   cron: "0 * * * *" # every hour
 
 update_prev_demand_count:
-  cron: "0 */2 * * *" # every 2 hours
+  cron: "0 */3 * * *" # every 3 hours
   class: UpdatePrevDemandCountJob
   queue: default
 
