@@ -110,26 +110,6 @@ class Product
     self.total_reserved + quantity <= self.total_inventory
   end
 
-  def self.high_inventory_products
-    Product.where(
-      :"total_inventory".gt => 0,
-      :$expr => {
-        :$gt => [
-          { :$divide => [
-              { :$subtract => [
-                "$total_inventory",
-                "$total_reserved"
-                ]
-              },
-              "$total_inventory"
-            ]
-          },
-          INVENTORY_HIGH_BAR
-        ]
-      }
-    )
-  end
-
   def self.trigger_track_product_demand_jobs(product_ids)
     return if Rails.env.test?
     product_ids.each do |id|

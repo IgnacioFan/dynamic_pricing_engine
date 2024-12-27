@@ -5,7 +5,7 @@ class MonitorHighInventoryJob
   sidekiq_options retry: 2
 
   def perform
-    Product.high_inventory_products.each do |product|
+    Product.where(inventory_level: :high).each do |product|
       AdjustProductPriceService.call(product.id.to_s)
     end
   end

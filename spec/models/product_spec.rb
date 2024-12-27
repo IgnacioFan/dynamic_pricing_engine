@@ -130,17 +130,4 @@ RSpec.describe Product, type: :model do
       end
     end
   end
-
-  describe '.high_inventory_products' do
-    let!(:high_inventory_product) { create(:product, name: "high", total_inventory: 100, total_reserved: 10) }
-    let!(:low_inventory_product) { create(:product, name: "low", total_inventory: 100, total_reserved: 30) }
-    let!(:empty_inventory_product) { create(:product, name: "empty", total_inventory: 0, total_reserved: 0) }
-
-    it 'returns high inventory products' do
-      result = Product.high_inventory_products
-      expect(result).to include(high_inventory_product)
-      expect(result).not_to include(low_inventory_product)
-      expect(result).not_to include(empty_inventory_product)
-    end
-  end
 end
