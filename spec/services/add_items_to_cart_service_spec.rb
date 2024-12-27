@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe AddItemsToCartService, type: :service do
-  let(:product) { create(:product, total_inventory: 10, total_reserved: 0) }
+  let(:product) { create(:product, current_demand_count: 2, total_inventory: 10, total_reserved: 0) }
   let(:cart_items) { [ { product_id: product.id, quantity: 2 } ] }
 
   describe '.call' do
@@ -12,7 +12,7 @@ RSpec.describe AddItemsToCartService, type: :service do
         expect(cart.persisted?).to eq(true)
         expect(cart.cart_items[0].product_id).to eq(product.id)
         expect(cart.cart_items[0].quantity).to eq(2)
-        expect(product.reload.current_demand_count).to eq(20)
+        expect(product.reload.current_demand_count).to eq(3)
       end
     end
 
@@ -25,7 +25,7 @@ RSpec.describe AddItemsToCartService, type: :service do
         expect(new_cart.id).to eq(cart.id)
         expect(new_cart.cart_items[0].product_id).to eq(product.id)
         expect(new_cart.cart_items[0].quantity).to eq(2)
-        expect(product.reload.current_demand_count).to eq(20)
+        expect(product.reload.current_demand_count).to eq(3)
       end
     end
 

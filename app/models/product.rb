@@ -24,8 +24,6 @@ class Product
 
   field :inventory_level, type: Symbol, default: :high
   field :demand_level, type: Symbol, default: :low
-  # field :demand_price, type: BSON::Decimal128
-  # field :inventory_price, type: BSON::Decimal128
 
   field :total_inventory, type: Integer, default: 0
   field :total_reserved, type: Integer, default: 0
@@ -108,27 +106,6 @@ class Product
     return false if quantity <= 0
 
     self.total_reserved + quantity <= self.total_inventory
-  end
-
-  def high_demand_product?
-    return false if current_demand_count < HIGH_DEMAND_BAR
-    current_demand_count - previous_demand_count >= 5
-  end
-
-  def low_inventory_level?
-    total_inventory = self.total_inventory.to_f
-    total_reserved = self.total_reserved.to_f
-    return false if total_inventory.zero?
-
-    (total_inventory - total_reserved) / total_inventory < INVENTORY_LOW_BAR
-  end
-
-  def high_inventory_level?
-    total_inventory = self.total_inventory.to_f
-    total_reserved = self.total_reserved.to_f
-    return false if total_inventory.zero?
-
-    (total_inventory - total_reserved) / total_inventory > INVENTORY_HIGH_BAR
   end
 
   def self.high_inventory_products

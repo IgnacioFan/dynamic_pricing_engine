@@ -6,7 +6,7 @@ class UpdatePrevDemandCountJob
 
   def perform
     Product.high_demand_products.each { |p|
-      p.update!(previous_demand_count: p.current_demand_count)
+      p.update!(previous_demand_count: [ p.current_demand_count, p.previous_demand_count ].max)
     }
   end
 end

@@ -51,13 +51,12 @@ class AddItemsToCartService < ApplicationService
       cart_item = cart.cart_items.find_or_initialize_by(product_id: product.id)
       cart_item.quantity = item[:quantity]
 
-      new_demand_count = ((product.total_reserved + item[:quantity].to_f)/product.total_inventory * 100).ceil
       caches[product.id.to_s] = {
         update_one: {
           filter: { _id: product.id },
           update: {
             "$set" => {
-              "current_demand_count" => new_demand_count
+              "current_demand_count" => product.current_demand_count + 1
             }
           }
         }

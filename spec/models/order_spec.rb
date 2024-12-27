@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Order, type: :model do
-  let(:product) { create(:product, total_inventory: 10, total_reserved: 0) }
+  let(:product) { create(:product, total_inventory: 10, total_reserved: 0, current_demand_count: 2) }
   let(:cart) { create(:cart, cart_items: [ cart_item ]) }
   let(:cart_item) { build(:cart_item, product:, quantity: 2) }
 
@@ -16,6 +16,7 @@ RSpec.describe Order, type: :model do
         product.reload
         expect(product.total_inventory).to eq(10)
         expect(product.total_reserved).to eq(2)
+        expect(product.current_demand_count).to eq(3)
       end
     end
 
@@ -78,7 +79,7 @@ RSpec.describe Order, type: :model do
         product.reload
 
         expect(product.total_reserved).to eq(2)
-        expect(product.current_demand_count).to eq(((product.total_reserved.to_f / product.total_inventory) * 100).ceil)
+        expect(product.current_demand_count).to eq(3)
         expect(errors).to be_empty
       end
     end

@@ -55,16 +55,13 @@ class Order
         totals[:price] += product.dynamic_price * item.quantity
         totals[:quantity] += item.quantity
 
-        new_demand_count = ((product.total_reserved + item.quantity.to_f)/product.total_inventory * 100).ceil
-        new_total_reserved = product.total_reserved + item.quantity
-
         caches[product.id.to_s] = {
           update_one: {
             filter: { _id: product.id },
             update: {
               "$set" => {
-                "current_demand_count" => new_demand_count,
-                "total_reserved" => new_total_reserved
+                "current_demand_count" => product.current_demand_count + 1,
+                "total_reserved" => product.total_reserved + item.quantity
               }
             }
           }

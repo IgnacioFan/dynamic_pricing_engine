@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe "Products API", type: :request do
   describe "GET /api/v1/products" do
-    let(:product_1) { build(:product, name: "Foo", default_price: 100, total_inventory: 100, total_reserved: 0) }
-    let(:product_2) { build(:product, name: "Bar", default_price: 200, total_inventory: 200, total_reserved: 0) }
+    let(:product_1) { build(:product, name: "Foo", dynamic_price: 100, total_inventory: 100, total_reserved: 0) }
+    let(:product_2) { build(:product, name: "Bar", dynamic_price: 200, total_inventory: 200, total_reserved: 0) }
 
     before { allow(Product).to receive(:all).and_return([ product_1, product_2 ]) }
 
@@ -15,8 +15,8 @@ RSpec.describe "Products API", type: :request do
         parsed_response = JSON.parse(response.body, symbolize_names: true)[:products]
         expect(parsed_response[0][:name]).to eq(product_1.name)
         expect(parsed_response[1][:name]).to eq(product_2.name)
-        expect(parsed_response[0][:dynamic_price]).to eq(product_1.default_price)
-        expect(parsed_response[1][:dynamic_price]).to eq(product_2.default_price)
+        expect(parsed_response[0][:dynamic_price]).to eq(product_1.dynamic_price)
+        expect(parsed_response[1][:dynamic_price]).to eq(product_2.dynamic_price)
         expect(parsed_response[0][:total_inventory]).to eq(product_1.total_inventory)
         expect(parsed_response[1][:total_inventory]).to eq(product_2.total_inventory)
       end
@@ -24,7 +24,7 @@ RSpec.describe "Products API", type: :request do
   end
 
   describe "GET /api/v1/products/:id" do
-    let(:product) { build(:product) }
+    let(:product) { build(:product, name: "Foo", dynamic_price: 100, total_inventory: 100, total_reserved: 0) }
 
     before { allow(Product).to receive(:find).and_return(product) }
 
@@ -35,7 +35,7 @@ RSpec.describe "Products API", type: :request do
         expect(response).to have_http_status(:ok)
         parsed_response = JSON.parse(response.body, symbolize_names: true)
         expect(parsed_response[:name]).to eq(product.name)
-        expect(parsed_response[:dynamic_price]).to eq(product.default_price)
+        expect(parsed_response[:dynamic_price]).to eq(product.dynamic_price)
         expect(parsed_response[:total_inventory]).to eq(product.total_inventory)
       end
     end
@@ -44,8 +44,8 @@ RSpec.describe "Products API", type: :request do
   describe "POST /api/v1/products/import" do
     let(:file_format) { 'text/csv' }
     let(:csv_file) { fixture_file_upload('valid_inventory.csv', file_format) }
-    let(:product_1) { build(:product, name: "Foo", default_price: 100, total_inventory: 100, total_reserved: 0) }
-    let(:product_2) { build(:product, name: "Bar", default_price: 200, total_inventory: 200, total_reserved: 0) }
+    let(:product_1) { build(:product, name: "Foo", dynamic_price: 100, total_inventory: 100, total_reserved: 0) }
+    let(:product_2) { build(:product, name: "Bar", dynamic_price: 200, total_inventory: 200, total_reserved: 0) }
     let(:service_result) { double(success?: true, payload: [ product_1, product_2 ]) }
 
     before { allow(ImportInventoryCsvService).to receive(:call).and_return(service_result) }
@@ -58,8 +58,8 @@ RSpec.describe "Products API", type: :request do
         parsed_response = JSON.parse(response.body, symbolize_names: true)[:products]
         expect(parsed_response[0][:name]).to eq(product_1.name)
         expect(parsed_response[1][:name]).to eq(product_2.name)
-        expect(parsed_response[0][:dynamic_price]).to eq(product_1.default_price)
-        expect(parsed_response[1][:dynamic_price]).to eq(product_2.default_price)
+        expect(parsed_response[0][:dynamic_price]).to eq(product_1.dynamic_price)
+        expect(parsed_response[1][:dynamic_price]).to eq(product_2.dynamic_price)
         expect(parsed_response[0][:total_inventory]).to eq(product_1.total_inventory)
         expect(parsed_response[1][:total_inventory]).to eq(product_2.total_inventory)
       end
