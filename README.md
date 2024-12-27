@@ -312,6 +312,11 @@ Status: 201 Created
 
 ## How to Set Up Locally
 
+### Prerequisites
+
+- Ruby version: `ruby-3.2.0` install already
+- Docker installed already
+
 ### Setup Steps
 1. Clone the Repository:
    ```
@@ -320,8 +325,9 @@ Status: 201 Created
    ```
 
 2. Set Up Master Key and Credentials
-  - Create a master.key file in the config directory.
-  - Ensure credentials.yml.enc exists and contains encrypted credentials.
+  - Create a `master.key` file in the config directory.
+  - Enter credentials.yml.enc to view the following credentials, run (`EDITOR="code --wait" rails credentials:edit`).
+  - Note: If you haven't installed Rails under Ruby 3.2.0, you will need to run bundle install first.
     ```
     sinatra_pricing_api_key: ""
     sidekiqweb:
@@ -329,18 +335,16 @@ Status: 201 Created
       password: ""
     ```
 
-3. Build and Run the Application
+3. Build and Run the API server
    ```
-   docker compose up
-
-   or
-
-   docker compose up --build
+   docker compose up -d
    ```
    This command will set up and run the application along with its dependencies.
 
 4. Access the Application
-   Open your terminal or [Postman](#api-documentation) to test the APIs.
+  - Check if the API server is running (`localhost:3000/up`)
+  - Open your terminal or [Postman](#api-documentation) to test the APIs.
+  - Enter `localhost:3000/sidekiq`, username and password are in the credentials.yml.enc
 
 ### Testing
 1. Run Test Suite:
@@ -358,4 +362,12 @@ Status: 201 Created
    rspec spec/...
    ```
 
+3. Access the API container environment
+   ```
+   make bash
+   ```
 
+3. Access the Rails console
+   ```
+   make console
+   ```
