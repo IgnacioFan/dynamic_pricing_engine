@@ -4,8 +4,6 @@ RSpec.describe AdjustProductPriceService, type: :service do
   let(:service) { described_class.call(product.id) }
 
   describe ".call" do
-    let(:dynamic_price_expried_at) { 3.hours.ago.utc }
-
     context "when the product is not found" do
       it "returns an error" do
         result = described_class.call(9999)
@@ -13,155 +11,26 @@ RSpec.describe AdjustProductPriceService, type: :service do
       end
     end
 
-    context "when the product demand level is high" do
-      context "and the inventory level is high" do
-        let!(:product) do
-          create(:product,
-            default_price: 100,
-            dynamic_price: 99,
-            current_demand_count: 5,
-            previous_demand_count: 1,
-            total_inventory: 100,
-            total_reserved: 10,
-            dynamic_price_expried_at:
-          )
-        end
-
-        it {
-          product = service.payload
-          expect(product.dynamic_price).to eq(100.0) # select default_price
-          expect(product.demand_level).to eq(:high)
-          expect(product.inventory_level).to eq(:high)
-        }
-      end
-
-      context "and the inventory level is medium" do
-        let!(:product) do
-          create(:product,
-            default_price: 100,
-            dynamic_price: 99,
-            current_demand_count: 5,
-            previous_demand_count: 1,
-            total_inventory: 100,
-            total_reserved: 50,
-            dynamic_price_expried_at:
-          )
-        end
-
-        it {
-          product = service.payload
-          expect(product.dynamic_price).to eq(104.0) # select dynamic_price
-          expect(product.demand_level).to eq(:high)
-          expect(product.inventory_level).to eq(:medium)
-        }
-      end
-
-      context "and the inventory level is low" do
-        let!(:product) do
-          create(:product,
-            default_price: 100,
-            dynamic_price: 99,
-            current_demand_count: 5,
-            previous_demand_count: 1,
-            total_inventory: 100,
-            total_reserved: 90,
-            dynamic_price_expried_at:
-          )
-        end
-
-        it {
-          product = service.payload
-          expect(product.dynamic_price).to eq(109.0) # select dynamic_price
-          expect(product.demand_level).to eq(:high)
-          expect(product.inventory_level).to eq(:low)
-        }
-      end
-    end
-
-    context "when the product demand level is low" do
-      context "and the inventory level is high" do
-        let!(:product) do
-          create(:product,
-            default_price: 100,
-            dynamic_price: 99,
-            current_demand_count: 0,
-            previous_demand_count: 10,
-            total_inventory: 100,
-            total_reserved: 10,
-            dynamic_price_expried_at:
-          )
-        end
-
-        it {
-          product = service.payload
-          expect(product.dynamic_price).to eq(94.0) # select dynamic_price
-          expect(product.demand_level).to eq(:low)
-          expect(product.inventory_level).to eq(:high)
-        }
-      end
-
-      context "and the inventory level is medium" do
-        let!(:product) do
-          create(:product,
-            default_price: 100,
-            dynamic_price: 99,
-            current_demand_count: 0,
-            previous_demand_count: 10,
-            total_inventory: 100,
-            total_reserved: 50,
-            dynamic_price_expried_at:
-          )
-        end
-
-        it {
-          product = service.payload
-          expect(product.dynamic_price).to eq(99.0) # select dynamic_price
-          expect(product.demand_level).to eq(:low)
-          expect(product.inventory_level).to eq(:medium)
-        }
-      end
-
-      context "and the inventory level is low" do
-        let!(:product) do
-          create(:product,
-            default_price: 100,
-            dynamic_price: 99,
-            current_demand_count: 0,
-            previous_demand_count: 10,
-            total_inventory: 100,
-            total_reserved: 90,
-            dynamic_price_expried_at:
-          )
-        end
-
-        it {
-          product = service.payload
-          expect(product.dynamic_price).to eq(104.0) # select dynamic_price
-          expect(product.demand_level).to eq(:low)
-          expect(product.inventory_level).to eq(:low)
-        }
-      end
-    end
-
-    context "when the product inventory is high and the price is close the price floor" do
+    context "when the product exists" do
       let!(:product) do
         create(:product,
           default_price: 100,
-          dynamic_price: 99,
-          price_floor: 95,
-          current_demand_count: 0,
-          previous_demand_count: 10,
+          current_demand_count: 10,
+          previous_demand_count: 9,
           total_inventory: 100,
-          total_reserved: 10,
-          dynamic_price_expried_at:
+          total_reserved: 96,
+          inventory_thresholds: { very_low: 0.95, low: 0.80, medium: 0.60, high: 0.40, very_high: 0.20 },
+          inventory_rates: { very_high: -0.30, high: -0.15, medium: -0.05, low: 0, very_low: 0.10 },
+          demand_rates: { high: 0.05, medium: 0.025, low: 0 },
+          dynamic_price_expried_at: 3.hours.ago.utc
         )
       end
 
-      it "decreases the inventory price" do
+      it "update product's price, demand, and inventory levels" do
         product = service.payload
-        expect(product.dynamic_price).to eq(99.0)
-        expect(product.demand_level).to eq(:low)
-        expect(product.inventory_level).to eq(:high)
+        expect(product.dynamic_price).to eq(115)
+        expect(product.demand_level).to eq(:high)
+        expect(product.inventory_level).to eq(:very_low)
       end
     end
   end

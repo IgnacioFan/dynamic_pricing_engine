@@ -1,82 +1,13 @@
 require 'rails_helper'
 
 RSpec.describe Product, type: :model do
-  describe '#dynamic_price' do
-    let(:dynamic_price_expried_at) { 3.hours.ago.utc }
-
-    context "When product is in high inventory" do
-      let!(:product) { create(:product, default_price: 100.0, inventory_level: :high, demand_level: :low, dynamic_price_expried_at:) }
-
-      it "returns the lowest price" do
-        product.calculate_dynamic_price
-        expect(product.dynamic_price).to eq(95.0)
-        expect(product.dynamic_price_expried_at > dynamic_price_expried_at).to eq(true)
-      end
-    end
-
-    context "When product is in medium inventory" do
-      let!(:product) { create(:product, default_price: 100.0, inventory_level: :medium, demand_level: :low, dynamic_price_expried_at:) }
-
-      it "returns the lowest price" do
-        product.calculate_dynamic_price
-        expect(product.dynamic_price).to eq(100.0)
-        expect(product.dynamic_price_expried_at > dynamic_price_expried_at).to eq(true)
-      end
-    end
-
-    context "When product is in low inventory" do
-      let!(:product) { create(:product, default_price: 100.0, inventory_level: :low, demand_level: :low, dynamic_price_expried_at:) }
-
-      it "returns the highest price" do
-        product.calculate_dynamic_price
-        expect(product.dynamic_price).to eq(105.0)
-        expect(product.dynamic_price_expried_at > dynamic_price_expried_at).to eq(true)
-      end
-    end
-
-    context "When product is in high demand" do
-      let!(:product) { create(:product, default_price: 100.0, inventory_level: :low, demand_level: :high, dynamic_price_expried_at:) }
-      it "returns the highest price" do
-        expect(product.calculate_dynamic_price).to eq(110.0)
-      end
-    end
-
-    context "When product price is above the competitor price" do
-      let!(:product) { create(:product, default_price: 100.0, competitor_price: 108.0, inventory_level: :low, demand_level: :high, dynamic_price_expried_at:) }
-
-      it "returns the highest price" do
-        product.calculate_dynamic_price
-        expect(product.dynamic_price).to eq(108.0)
-        expect(product.dynamic_price_expried_at > dynamic_price_expried_at).to eq(true)
-      end
-    end
-
-    context "When product price is close to the price floor" do
-      let!(:product) { create(:product, default_price: 100, dynamic_price: 80, price_floor: 80, inventory_level: :high, demand_level: :low, dynamic_price_expried_at:) }
-
-      it "returns the price over the price floor" do
-        product.calculate_dynamic_price
-        expect(product.dynamic_price).to eq(80.0)
-        expect(product.dynamic_price_expried_at > dynamic_price_expried_at).to eq(true)
-      end
-    end
-
-    context "When product price is close to the default price floor" do
-      let!(:product) { create(:product, default_price: 100, dynamic_price: 50, inventory_level: :high, demand_level: :low, dynamic_price_expried_at:) }
-
-      it "returns the price over the price floor" do
-        product.calculate_dynamic_price
-        expect(product.dynamic_price).to eq(50.0)
-        expect(product.dynamic_price_expried_at > dynamic_price_expried_at).to eq(true)
-      end
-    end
-  end
-
   describe 'callback' do
-    context "When dynamic_price_period is 2" do
-      let(:product) { create(:product, dynamic_price_period: 2) }
+    context "When product is created" do
+      let(:product) { create(:product, default_price: 120, dynamic_price_period: 2) }
 
-      it "set the dynamic_price_expried_at field to 2 hours later" do
+      it "set the dynamic_price_expried_at and dynamic_price fields" do
+        expect(product.dynamic_price).to eq(120.0)
+
         product_expiration = (Time.now.utc + 2.hours).strftime("%Y-%m-%d %H:%M:%S")
         expect(product.dynamic_price_expried_at.strftime("%Y-%m-%d %H:%M:%S")).to eq(product_expiration)
       end

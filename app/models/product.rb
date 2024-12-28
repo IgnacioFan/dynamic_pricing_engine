@@ -1,15 +1,6 @@
 class Product
   include Mongoid::Document
   include Mongoid::Timestamps
-  # For inventory_level field
-  INVENTORY_LOW_BAR = 0.2.freeze
-  INVENTORY_HIGH_BAR = 0.8.freeze
-  # For dynamic_price field
-  DEMAND_PRICE_INCR_RATE = 0.05.freeze
-  INVENTORY_PRICE_INCR_RATE = 0.05.freeze
-  INVENTORY_PRICE_DECR_RATE = 0.05.freeze
-  # For price_floor field
-  DEFAULT_PRICE_FLOOR_RATE = 0.5.freeze
 
   field :name, type: String
   field :category, type: String
@@ -18,9 +9,7 @@ class Product
   field :default_price, type: BSON::Decimal128
   field :dynamic_price, type: BSON::Decimal128
 
-  field :price_floor, type: BSON::Decimal128
-
-  field :inventory_level, type: Symbol, default: :high
+  field :inventory_level, type: Symbol, default: :very_high
   field :demand_level, type: Symbol, default: :low
 
   field :total_inventory, type: Integer, default: 0
@@ -48,40 +37,8 @@ class Product
   validates :inventory_level, inclusion: { in: [ :very_low, :low, :medium, :high, :very_high ] }
   validates :demand_level, inclusion: { in: [ :low, :medium, :high ] }
 
-  before_save :set_price_floor, :set_default_dynamic_price
+  before_save :set_default_dynamic_price
   before_save :set_dynamic_price_expried_at
-
-
-  def calculate_dynamic_price
-    return dynamic_price if Time.now.utc <= dynamic_price_expried_at
-
-    inventory_price = case inventory_level
-    when :high
-      # decrease the price if the product's inventory level is high
-      dynamic_price - (default_price * INVENTORY_PRICE_DECR_RATE)
-    when :medium
-      dynamic_price
-    when :low
-      # increase the price if the product's inventory level is low
-      dynamic_price + (default_price * INVENTORY_PRICE_INCR_RATE)
-    end
-    # prevent the dynamic price from lowering the price floor
-    if inventory_price < price_floor
-      inventory_price = dynamic_price
-    end
-
-    demand_adjusted_price = if high_demand?
-      # increase the price if the product is frequently added to carts or placed order
-      [ inventory_price + (default_price * DEMAND_PRICE_INCR_RATE), default_price ].compact.max
-    elsif low_demand_low_inventory?
-      [ inventory_price, default_price ].compact.max
-    else
-      [ inventory_price, default_price ].compact.min
-    end
-
-    self.dynamic_price_expried_at = Time.now.utc + 3.hours
-    self.dynamic_price = [ demand_adjusted_price, competitor_price ].compact.min
-  end
 
   def calculate_dynamic_price_v2
     return if Time.now.utc <= dynamic_price_expried_at
@@ -145,14 +102,6 @@ class Product
     end
   end
 
-  def high_demand?
-    self.demand_level == :high
-  end
-
-  def low_demand_low_inventory?
-    self.demand_level == :low && self.inventory_level == :low
-  end
-
   def available_inventory?(quantity)
     return false if quantity <= 0
 
@@ -167,10 +116,6 @@ class Product
   end
 
   private
-
-  def set_price_floor
-    self.price_floor ||= default_price * DEFAULT_PRICE_FLOOR_RATE
-  end
 
   def set_default_dynamic_price
     self.dynamic_price ||= default_price
