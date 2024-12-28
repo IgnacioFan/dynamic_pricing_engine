@@ -8,7 +8,7 @@ class AdjustProductPriceService < ApplicationService
 
     product.set_inventory_level
     product.set_demand_level
-    product.calculate_dynamic_price_v2
+    product.calculate_dynamic_price
     product.save!
 
     success(product)

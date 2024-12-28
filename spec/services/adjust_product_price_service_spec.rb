@@ -22,7 +22,7 @@ RSpec.describe AdjustProductPriceService, type: :service do
           inventory_thresholds: { very_low: 0.95, low: 0.80, medium: 0.60, high: 0.40, very_high: 0.20 },
           inventory_rates: { very_high: -0.30, high: -0.15, medium: -0.05, low: 0, very_low: 0.10 },
           demand_rates: { high: 0.05, medium: 0.025, low: 0 },
-          dynamic_price_expried_at: 3.hours.ago.utc
+          dynamic_price_expiry: 3.hours.ago.utc
         )
       end
 

@@ -3,19 +3,19 @@ require 'rails_helper'
 RSpec.describe Product, type: :model do
   describe 'callback' do
     context "When product is created" do
-      let(:product) { create(:product, default_price: 120, dynamic_price_period: 2) }
+      let(:product) { create(:product, default_price: 120, dynamic_price_duration: 2) }
 
-      it "set the dynamic_price_expried_at and dynamic_price fields" do
+      it "set the dynamic_price_expiry and dynamic_price fields" do
         expect(product.dynamic_price).to eq(120.0)
 
         product_expiration = (Time.now.utc + 2.hours).strftime("%Y-%m-%d %H:%M:%S")
-        expect(product.dynamic_price_expried_at.strftime("%Y-%m-%d %H:%M:%S")).to eq(product_expiration)
+        expect(product.dynamic_price_expiry.strftime("%Y-%m-%d %H:%M:%S")).to eq(product_expiration)
       end
     end
   end
 
   describe '#dynamic_price_v2' do
-    let(:dynamic_price_period) { 3 }
+    let(:dynamic_price_duration) { 3 }
     let(:competitor_price) { nil }
     let!(:product) do
       create(
@@ -27,29 +27,29 @@ RSpec.describe Product, type: :model do
         demand_level: :high,
         inventory_rates: { very_high: -0.30, high: -0.15, medium: -0.05, low: 0, very_low: 0.10 },
         demand_rates: { high: 0.05, medium: 0.025, low: 0 },
-        dynamic_price_expried_at:,
-        dynamic_price_period:
+        dynamic_price_expiry:,
+        dynamic_price_duration:
       )
     end
 
     context "When product's price has not expired" do
-      let(:dynamic_price_expried_at) { Time.now.utc + dynamic_price_period.hours }
+      let(:dynamic_price_expiry) { Time.now.utc + dynamic_price_duration.hours }
 
       it "returns the current product price" do
-        product.calculate_dynamic_price_v2
+        product.calculate_dynamic_price
         expect(product.dynamic_price).to eq(95.0)
-        expect(product.dynamic_price_expried_at).to eq(dynamic_price_expried_at)
+        expect(product.dynamic_price_expiry).to eq(dynamic_price_expiry)
       end
     end
 
     context "When product's price expired" do
-      let(:dynamic_price_expried_at) { dynamic_price_period.hours.ago.utc }
+      let(:dynamic_price_expiry) { dynamic_price_duration.hours.ago.utc }
 
       context "when product is in very low inventory level and high demand level" do
         it "returns the current product price" do
-          product.calculate_dynamic_price_v2
+          product.calculate_dynamic_price
           expect(product.dynamic_price).to eq(115.0)
-          expect(product.dynamic_price_expried_at > dynamic_price_expried_at).to eq(true)
+          expect(product.dynamic_price_expiry > dynamic_price_expiry).to eq(true)
         end
       end
 
@@ -57,9 +57,9 @@ RSpec.describe Product, type: :model do
         let(:competitor_price) { 108.0 }
 
         it "returns the current product price" do
-          product.calculate_dynamic_price_v2
+          product.calculate_dynamic_price
           expect(product.dynamic_price).to eq(108.0)
-          expect(product.dynamic_price_expried_at > dynamic_price_expried_at).to eq(true)
+          expect(product.dynamic_price_expiry > dynamic_price_expiry).to eq(true)
         end
       end
     end
