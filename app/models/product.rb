@@ -8,22 +8,20 @@ class Product
   field :competitor_price, type: BSON::Decimal128
   field :default_price, type: BSON::Decimal128
   field :dynamic_price, type: BSON::Decimal128
-  field :dynamic_price_expiry, type: DateTime # prevent frequent price updates
-  field :dynamic_price_duration, type: Integer, default: 3 # hours until the next price update
+  field :dynamic_price_expiry, type: DateTime
+  field :dynamic_price_duration, type: Integer, default: 3 # in hours
 
   field :inventory_level, type: Symbol, default: :very_high
   field :demand_level, type: Symbol, default: :low
-
   field :total_inventory, type: Integer, default: 0
   field :total_reserved, type: Integer, default: 0
 
-  # use inventory_rates to adjust dynamic_price based on the inventory level
+  # Configurable thresholds and rates
   field :inventory_rates, type: Hash, default: { very_high: -0.30, high: -0.15, medium: -0.05, low: 0, very_low: 0.10 }
-  # use demand_rates to adjust dynamic_price based on the demand level
   field :demand_rates, type: Hash, default: { high: 0.05, medium: 0.025, low: 0 }
-  # use inventory_thresholds to scope the product's inventory level
   field :inventory_thresholds, type: Hash, default: { very_low: 95, low: 80, medium: 60, high: 40, very_high: 20 }
-  # use current_demand_count and previous_demand_count to scope product's demand level
+
+  # Demand tracking
   field :current_demand_count, type: Integer, default: 0
   field :previous_demand_count, type: Integer, default: 0
 
@@ -38,29 +36,41 @@ class Product
   validates :total_reserved, numericality: { greater_than_or_equal_to: 0 }
 
   before_create :calculate_dynamic_price
-  before_create :set_dynamic_price_expiry
+  before_create :initialize_dynamic_price_expiry
+
+  def dynamic_price_expired?
+    dynamic_price_expiry.nil? || Time.now.utc > dynamic_price_expiry
+  end
 
   def calculate_dynamic_price
-    return if dynamic_price_expiry && Time.now.utc <= dynamic_price_expiry
-
-    new_price = default_price + inventory_factor + demand_factor
-
-    # reset_current_demand_count
-    # self.dynamic_price_expiry = Time.now.utc + dynamic_price_duration.hours
-    self.dynamic_price = [ new_price, competitor_price ].compact.min
+    return unless dynamic_price_expired?
+    # the inventory_price is adjusted by inventory level,
+    # and can be seen as a predictable profit range for the product
+    inventory_price = default_price + inventory_factor
+    # debugger
+    adjustment_price = if competitor_price && competitor_price < inventory_price
+      # when a competitor's price is lower than the bottom price of the product's inventory level,
+      # we stick with our bottom price to avoid unpredictable price competition
+      inventory_price
+    else
+      # otherwise, we seek the highest price
+      [ inventory_price, competitor_price ].compact.max
+    end
+    # the final price will be the adjustment price plus the demand factor to leaverge profits
+    self.dynamic_price = adjustment_price + demand_factor
   end
 
   def reset_current_demand_count
-    if current_demand_count > 0 && Time.now.utc > dynamic_price_expiry
-      self.previous_demand_count = current_demand_count
-      self.current_demand_count = 0
-    end
+    return unless dynamic_price_expired? && current_demand_count.positive?
+
+    self.previous_demand_count = current_demand_count
+    self.current_demand_count = 0
   end
 
   def reset_dynamic_price_expiry
-    if Time.now.utc > dynamic_price_expiry
-      self.dynamic_price_expiry = Time.now.utc + dynamic_price_duration.hours
-    end
+    return unless dynamic_price_expired?
+
+    self.dynamic_price_expiry = Time.now.utc + dynamic_price_duration.hours
   end
 
   def inventory_factor
@@ -73,24 +83,19 @@ class Product
     default_price * adjustment_rate
   end
 
-  def set_inventory_level
+  def update_inventory_level
     inventory_ratio = total_inventory.zero? ? 1 : total_reserved.to_f / total_inventory
 
     self.inventory_level = case inventory_ratio
-    when inventory_thresholds[:very_low]...1
-      :very_low
-    when inventory_thresholds[:low]...inventory_thresholds[:very_low]
-      :low
-    when inventory_thresholds[:medium]...inventory_thresholds[:low]
-      :medium
-    when inventory_thresholds[:high]...inventory_thresholds[:medium]
-      :high
-    else
-      :very_high
+    when inventory_thresholds[:very_low]...1                          then :very_low
+    when inventory_thresholds[:low]...inventory_thresholds[:very_low] then :low
+    when inventory_thresholds[:medium]...inventory_thresholds[:low]   then :medium
+    when inventory_thresholds[:high]...inventory_thresholds[:medium]  then :high
+    else                                                              :very_high
     end
   end
 
-  def set_demand_level
+  def update_demand_level
     self.demand_level = if current_demand_count > previous_demand_count
       :high
     elsif current_demand_count == previous_demand_count
@@ -115,11 +120,7 @@ class Product
 
   private
 
-  def set_default_dynamic_price
-    self.dynamic_price ||= default_price
-  end
-
-  def set_dynamic_price_expiry
+  def initialize_dynamic_price_expiry
     self.dynamic_price_expiry ||= Time.now.utc + dynamic_price_duration.hours
   end
 end

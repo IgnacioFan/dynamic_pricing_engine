@@ -6,10 +6,12 @@ class AdjustProductPriceService < ApplicationService
   def call
     return failure("Product not found") unless product
 
-    product.set_inventory_level
-    product.set_demand_level
-    product.calculate_dynamic_price
+    product.update_inventory_level
+    product.update_demand_level
     product.reset_current_demand_count
+    product.calculate_dynamic_price
+    # run the above before reset_dynamic_price_expiry
+    product.reset_dynamic_price_expiry
     product.save!
     success(product)
   end
