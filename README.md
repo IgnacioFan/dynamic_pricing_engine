@@ -1,88 +1,134 @@
-# Dynamic Pricing Engine
+# TC Dynamic Pricing Engine
 
 ## Overview
 
-This e-commerce platform is built with **Ruby on Rails**, **MongoDB**, **Redis**, and **Sidekiq** to feature realtime price adjustments. The dynamic pricing engine adjusts product prices in real-time based on demand, inventory levels, and competitor pricing.
+TC Dynamic Pricing Engine is an ecommerce API built with **Ruby on Rails**, **MongoDB**, **Redis**, and **Sidekiq**. It supports real-time price adjustments based on:
+
+- Demand: Prices increase when products are frequently added to carts or purchased.
+- Inventory Levels: Prices decrease when inventory levels are high and increase when inventory is low.
+- Competitor Prices: Prices adapt based on competitor pricing retrieved from a third-party API.
+
+## How to Set Up Locally
+
+### Prerequisites
+
+- Ruby version: 3.2.0
+- Docker
+
+### Setup Steps
+1. Clone the Repository:
+   ```bash
+   git clone https://github.com/IgnacioFan/dynamic_pricing_engine.git
+   cd dynamic-pricing-engine
+   ```
+
+2. Set up `master.key`:
+    The credentials for third-party APIs and Sidekiq web are stored in `config/credentials.yml.enc`. To access them, add a master.key file with the key c158f56e88b65c5db58647e2922799fb under the config directory. Right now, there is nothing sensitive, so it's fine to put the key in public. :)
+
+    To edit credentials using VS Code:
+    ```bash
+    EDITOR="code --wait" rails credentials:edit
+    ```
+
+    Ensure bundle install is run if you just installed Ruby 3.2.0. The credentials.yml.enc file should look like this:
+    ```bash
+    sinatra_pricing_api_key: ""
+
+    sidekiqweb:
+      username: ""
+      password: ""
+    ```
+
+3. Build and Run Services:
+   ```bash
+   docker compose up -d
+   <!-- For logs, omit -d -->
+   docker compose up
+   ```
+
+4. Access Services:
+
+  - Use `make bash` to access the Rails container.
+  - Use `make console` to open the Rails console.
+  - Access the Sidekiq web at `localhost:3000/sidekiq` (enter **admin** for username and password).
+
+### Testing
+
+Tests are implemented using RSpec for unit, service, job, and request testing.
+
+- Run all tests: `make test`
+- Run specific tests: `make test path="spec/..."`. Alternatively, `make bash` access the Rails container and run: `rspec spec/...`.
 
 ## System Architecture
 
-### Ruby on Rails API Server
-Handles client requests, processes business logic, and interacts with the MongoDB database for storing and retrieving persisted data.
-
-### MongoDB
-Document-based storage used to manage data like product and order data.
-
-### Background Jobs
-Runs via Sidekiq and Redis to maintain real-time price updates and process jobs like demand tracking and competitor price adjustments.
+1. **Ruby on Rails**: Handles client requests, processes business logic, and interacts with MongoDB.
+2. **MongoDB**: Stores product and order data in a document-based format.
+3. **Background Jobs**: Powered by Sidekiq and Redis to enable price adjustments and job processing.
 
 ## Dynamic Pricing
 
-The platform adjusts product pricing based on demand, inventory levels, and competitor pricing. The following fields are used in the pricing process:
+### Pricing Fields
 
-- `default_price`: The base price of the product.
-- `dynamic_price`: The adjusted price based on demand and inventory levels.
-- `competitor_price`: Pricing data from competitors.
-- `price_floor`: The minimum price for the product.
+| Field              | Type              | Description                                      |
+|--------------------|-------------------|--------------------------------------------------|
+| `competitor_price` | Decimal | Price from competitors fetched via API.          |
+| `default_price`    | Decimal | Base price set during product import.            |
+| `dynamic_price`    | Decimal | Price calculated based on competitor's price, demand, and inventory. |
 
 ### Dynamic Pricing Algorithm
 
-The `dynamic_price` is calculated considering the following factors:
+The `dynamic_price` is calculated considering the three steps:
 
-#### step 1: Inventory Levels:
-  - Prices are adjusted according to the inventory level: decreased for high inventory, increased for low inventory, and unchanged for medium inventory.
-  - The adjusted price will not drop below the `price_floor`.
+1. calculate an inventory price:
+A base price is decided by the product's inventory level. This provides a predictable profit range for the product.
 
-#### step 2: Demand Levels:
-  - High demand leads to an increase in price.
-  - For low demand: Products with low inventory maintain higher pricing; Products with high inventory prioritize lower pricing.
+2. calculate an adjustment price:
+It compares the inventory price with the competitor's price. Generally, it takes the higher one as the result, unless the competitor's price is lower than the inventory price, in which case the inventory price is used.
 
-#### step 3: Competitor Pricing:
-  - The final price is capped by the lower of the adjusted price and the `competitor_price`.
+3. Apply the demand factor to the adjustment price:
+The final price takes the adjustment price and applies the demand factor to advance profits.
 
-The adjusted `dynamic_price` is valid for **3 hours** to ensure price stability and prevent rapid fluctuations.
+For example, product in high inventory and low demand scenarios.
+
+| High Inventory & Low Demand   | Inventory Price | Adjustment Price | Final Price | Total |
+|---------------------------------------------------------------------|-----------------|------------------|-------------|------|
+| Default $100 <br> Competitor $50 <br> Inventory Factor -$20 <br> Demand Factor +$0 | $100 - 20 | $80 > $50 | $80 + 0 | $80 |
+| Default $100 <br> Competitor $90 <br> Inventory Factor -$20 <br> Demand Factor +$0 | $100 - 20 | $80 < $90 | $90 + 0 | $90 |
+
 
 ### Background Jobs
 
-To ensure prices are updated in real-time, the platform relies on the following background jobs:
-- `CompareSinatraPricingJob`: Runs hourly to update competitor prices by retrieving data from third-party APIs.
-- `MonitorHighInventoryJob`: Runs every midnight to identify and reduce prices for high-inventory products, encouraging sales.
-- `TrackProductDemandJob`: Triggers on cart creation, adding items to a cart, or order creation to adjust demand and inventory prices.
-- `UpdatePrevDemandCountJob`: Runs every three hours to update historical demand data for high-demand products.
-
-### High-Demand Tracking
-
-Products are classified as high demand if they frequently appear in carts or orders. The system uses two fields to track demand trends:
-
-- `current_demand_count`: Increments when a product is added to a cart or an order is created.
-- `previous_demand_count`: Represents the highest demand count historically.
-
-The `UpdatePrevDemandCountJob` ensures the `previous_demand_count` is always updated for high-demand products to reflect maximum historical demand.
+| Job                        | Description                                                       |
+|----------------------------|-------------------------------------------------------------------|
+| `CompareSinatraPricingJob` | runs hourly to update competitor prices from third-party APIs.    |
+| `MonitorHighInventoryJob`  | runs hourly to reduce prices for high-inventory products.      |
+| `TrackProductDemandJob`    | triggered by events to adjust demand and inventory prices|
 
 ## API Documentation
 
-If you use Postman, download and import [Dynamic-Pricing.postman_collection.json](/doc/Dynamic-Pricing.postman_collection.json) to help you test API mannually.
+If you use Postman, download and import [Dynamic-Pricing.postman_collection.json](/doc/Dynamic-Pricing.postman_collection.json) to help you test API manually. Alternatively, you can use the following curl commands.
 
 ### `GET /api/v1/products`
 
 Description: Lists all products with dynamic prices.
 
 #### Request
-```
-GET /api/v1/products
+```bash
+curl -X GET http://localhost:3000/api/v1/products
 ```
 
 #### Response
-```
-Status: 200 OK
+```json
+// Status: 200 OK
 {
   "products": [
     {
       "id": "BSON::ObjectId",
       "name": "Foo",
-      "category": "Test"
+      "category": "Test",
       "dynamic_price": 120.0,
       "total_inventory": 100,
-      "total_reserved": 20
+      "total_reserved": 20,
       "created_at": "2024-12-24 01:00:00",
       "updated_at": "2024-12-24 04:00:00"
     }
@@ -92,23 +138,23 @@ Status: 200 OK
 
 ### `GET /api/v1/products/:id`
 
-Description: Retrieves details of a specific product.
+Description: Retrieves a specific product.
 
 #### Request
-```
-GET /api/v1/products/:id
+```bash
+curl -X GET http://localhost:3000/api/v1/products/:id
 ```
 
 #### Response
-```
-Status: 200 OK
+```json
+// Status: 200 OK
 {
   "id": "BSON::ObjectId",
   "name": "Foo",
-  "category": "Test"
+  "category": "Test",
   "dynamic_price": 120.0,
   "total_inventory": 100,
-  "total_reserved": 20
+  "total_reserved": 20,
   "created_at": "2024-12-24 01:00:00",
   "updated_at": "2024-12-24 04:00:00"
 }
@@ -116,30 +162,27 @@ Status: 200 OK
 
 ### `POST /api/v1/products/import`
 
-Description: Imports product data via CSV file. [Sample CSV file](/doc/inventory.csv).
+Description: Imports product data via a CSV file. [Sample CSV file](/doc/inventory.csv).
 
 #### Request
-```
-POST /api/v1/products/import
-Headers: { "Content-Type": "multipart/form-data" }
-Body:
-{
-  "file": <CSV file>
-}
+```bash
+curl -X POST http://localhost:3000/api/v1/products/import \
+-H "Content-Type: multipart/form-data" \
+-F "file=file_path"
 ```
 
 #### Response
-```
-Status: 201 Created
+```json
+// Status: 201 Created
 {
   "products": [
     {
       "id": "BSON::ObjectId",
       "name": "Foo",
-      "category": "Test"
+      "category": "Test",
       "dynamic_price": 120.0,
       "total_inventory": 100,
-      "total_reserved": 20
+      "total_reserved": 20,
       "created_at": "2024-12-24 01:00:00",
       "updated_at": "2024-12-24 04:00:00"
     }
@@ -152,11 +195,10 @@ Status: 201 Created
 Description: Creates a shopping cart.
 
 #### Request
-```
-POST /api/v1/carts
-Headers: { "Content-Type": "application/json" }
-Body:
-{
+```bash
+curl -X POST http://localhost:3000/api/v1/carts \
+-H "Content-Type: application/json" \
+-d '{
   "cart": {
     "items": [
       {
@@ -165,12 +207,13 @@ Body:
       }
     ]
   }
-}
+}'
+
 ```
 
 #### Response
-```
-Status: 201 Created
+```json
+// Status: 201 Created
 {
   "cart_id": "BSON::ObjectId",
   "count": 1,
@@ -195,21 +238,20 @@ Status: 201 Created
 Description: Adds items to a shopping cart.
 
 #### Request
-```
-POST /api/v1/carts/:cart_id/items
-Headers: { "Content-Type": "application/json" }
-Body:
-{
+```bash
+curl -X POST http://localhost:3000/api/v1/carts/:cart_id/items \
+-H "Content-Type: application/json" \
+-d '{
   "cart_item": {
     "product_id": "BSON::ObjectId",
     "quantity": 1
   }
-}
+}'
 ```
 
 #### Response
-```
-Status: 201 Created
+```json
+// Status: 201 Created
 {
   "cart_id": "BSON::ObjectId",
   "count": 2,
@@ -245,13 +287,13 @@ Status: 201 Created
 Description: Removes an item from the shopping cart.
 
 #### Request
-```
-DELETE /api/v1/carts/:cart_id/items/:id
+```bash
+curl -X DELETE http://localhost:3000/api/v1/carts/:cart_id/items/:id
 ```
 
 #### Response
-```
-Status: 200 OK
+```json
+// Status: 200 OK
 {
   "cart_item": {
     "id": "BSON::ObjectId",
@@ -272,18 +314,17 @@ Status: 200 OK
 Description: Creates an order from a cart.
 
 #### Request
-```
-POST /api/v1/order
-Headers: { "Content-Type": "application/json" }
-Body:
-{
+```bash
+curl -X POST http://localhost:3000/api/v1/order \
+-H "Content-Type: application/json" \
+-d '{
   "cart_id": "BSON::ObjectId"
-}
+}'
 ```
 
 #### Response
-```
-Status: 201 Created
+```json
+// Status: 201 Created
 {
   "id": "BSON::ObjectId",
   "cart_id": "BSON::ObjectId",

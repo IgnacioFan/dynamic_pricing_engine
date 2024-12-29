@@ -47,15 +47,10 @@ class Product
     # the inventory_price is adjusted by inventory level,
     # and can be seen as a predictable profit range for the product
     inventory_price = default_price + inventory_factor
-    # debugger
-    adjustment_price = if competitor_price && competitor_price < inventory_price
-      # when a competitor's price is lower than the bottom price of the product's inventory level,
-      # we stick with our bottom price to avoid unpredictable price competition
-      inventory_price
-    else
-      # otherwise, we seek the highest price
-      [ inventory_price, competitor_price ].compact.max
-    end
+    # when a competitor's price is lower than the bottom price of the product's inventory level,
+    # we stick with our bottom price to avoid unpredictable price competition.
+    # Otherwise, we seek the highest price
+    adjustment_price = [ inventory_price, competitor_price ].compact.max
     # the final price will be the adjustment price plus the demand factor to leaverge profits
     self.dynamic_price = adjustment_price + demand_factor
   end
