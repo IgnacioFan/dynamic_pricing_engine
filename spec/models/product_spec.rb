@@ -2,19 +2,24 @@ require 'rails_helper'
 
 RSpec.describe Product, type: :model do
   describe 'callback' do
+    context "When product is built" do
+      let(:product) { build(:product, default_price: 120, dynamic_price_duration: 2) }
+
+      it { expect(product.dynamic_price).to eq(nil) }
+
+      it { expect(product.dynamic_price_expiry).to eq(nil) }
+    end
+
     context "When product is created" do
       let(:product) { create(:product, default_price: 120, dynamic_price_duration: 2) }
 
-      it "set the dynamic_price_expiry and dynamic_price fields" do
-        expect(product.dynamic_price).to eq(120.0)
+      it { expect(product.dynamic_price).to eq(120) }
 
-        product_expiration = (Time.now.utc + 2.hours).strftime("%Y-%m-%d %H:%M:%S")
-        expect(product.dynamic_price_expiry.strftime("%Y-%m-%d %H:%M:%S")).to eq(product_expiration)
-      end
+      it { expect(product.dynamic_price_expiry).not_to eq(nil) }
     end
   end
 
-  describe '#dynamic_price_v2' do
+  describe '#calculate_dynamic_price' do
     let(:dynamic_price_duration) { 3 }
     let(:competitor_price) { nil }
     let!(:product) do

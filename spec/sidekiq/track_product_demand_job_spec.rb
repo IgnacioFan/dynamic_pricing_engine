@@ -13,7 +13,6 @@ RSpec.describe TrackProductDemandJob, type: :job do
       it "calls AdjustProductPriceService" do
         described_class.new.perform(9999)
         expect(AdjustProductPriceService).to have_received(:call).with("9999")
-        described_class.drain
       end
     end
   end

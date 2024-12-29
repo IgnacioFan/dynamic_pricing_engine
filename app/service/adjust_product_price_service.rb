@@ -9,8 +9,8 @@ class AdjustProductPriceService < ApplicationService
     product.set_inventory_level
     product.set_demand_level
     product.calculate_dynamic_price
+    product.reset_current_demand_count
     product.save!
-
     success(product)
   end
 

@@ -1,4 +1,4 @@
-# This job runs when a product is added to cart or an order is created
+# adjust dynamic price by tracking demand, inventory, and competitor price changes.
 #
 class TrackProductDemandJob
   include Sidekiq::Job

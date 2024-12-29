@@ -37,16 +37,30 @@ class Product
   validates :total_inventory, numericality: { greater_than_or_equal_to: 0 }
   validates :total_reserved, numericality: { greater_than_or_equal_to: 0 }
 
-  before_save :set_default_dynamic_price
-  before_save :set_dynamic_price_expiry
+  before_create :calculate_dynamic_price
+  before_create :set_dynamic_price_expiry
 
   def calculate_dynamic_price
-    return if Time.now.utc <= dynamic_price_expiry
+    return if dynamic_price_expiry && Time.now.utc <= dynamic_price_expiry
 
     new_price = default_price + inventory_factor + demand_factor
 
-    self.dynamic_price_expiry = Time.now.utc + dynamic_price_duration.hours
+    # reset_current_demand_count
+    # self.dynamic_price_expiry = Time.now.utc + dynamic_price_duration.hours
     self.dynamic_price = [ new_price, competitor_price ].compact.min
+  end
+
+  def reset_current_demand_count
+    if current_demand_count > 0 && Time.now.utc > dynamic_price_expiry
+      self.previous_demand_count = current_demand_count
+      self.current_demand_count = 0
+    end
+  end
+
+  def reset_dynamic_price_expiry
+    if Time.now.utc > dynamic_price_expiry
+      self.dynamic_price_expiry = Time.now.utc + dynamic_price_duration.hours
+    end
   end
 
   def inventory_factor

@@ -1,4 +1,4 @@
-# This job runs every 2 hours
+# update competitor prices by retrieving data from third-party APIs
 #
 class CompareSinatraPricingJob
   include Sidekiq::Job

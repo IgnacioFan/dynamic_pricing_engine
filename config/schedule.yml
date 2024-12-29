@@ -3,12 +3,7 @@ compare_sinatra_pricing:
   queue: "default"
   cron: "0 * * * *" # every hour
 
-update_prev_demand_count:
-  cron: "0 */3 * * *" # every 3 hours
-  class: UpdatePrevDemandCountJob
-  queue: default
-
 monitor_high_inventory:
   class: "MonitorHighInventoryJob"
   queue: "default"
-  cron: "0 0 * * *" # at 12:00 AM
+  cron: "0 * * * *" # every hour
