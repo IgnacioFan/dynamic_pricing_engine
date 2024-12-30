@@ -99,9 +99,7 @@ class Product
   end
 
   def available_inventory?(quantity)
-    return false if quantity <= 0
-
-    self.total_reserved + quantity <= self.total_inventory
+    self.total_reserved + quantity >= 0 && self.total_reserved + quantity <= self.total_inventory
   end
 
   def self.trigger_track_product_demand_jobs(product_ids)

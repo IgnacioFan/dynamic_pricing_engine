@@ -1,11 +1,11 @@
 require 'rails_helper'
 
 RSpec.describe Order, type: :model do
-  let(:product) { create(:product, total_inventory: 10, total_reserved: 0, current_demand_count: 2) }
-  let(:cart) { create(:cart, cart_items: [ cart_item ]) }
-  let(:cart_item) { build(:cart_item, product:, quantity: 2) }
-
   describe '.place_order!' do
+    let(:product) { create(:product, total_inventory: 10, total_reserved: 0, current_demand_count: 2) }
+    let(:cart) { create(:cart, cart_items: [ cart_item ]) }
+    let(:cart_item) { build(:cart_item, product:, quantity: 2) }
+
     context 'when the cart exists' do
       it 'places the order successfully' do
         order, error = described_class.place_order!(cart.id)
@@ -59,7 +59,7 @@ RSpec.describe Order, type: :model do
     end
 
     context "when multiple threads place orders simultaneously" do
-      it "handles race conditions when two orders update the same product" do
+      it "handles race conditions when many orders update the same product" do
         threads = []
         errors = []
 
@@ -80,6 +80,63 @@ RSpec.describe Order, type: :model do
 
         expect(product.total_reserved).to eq(2)
         expect(product.current_demand_count).to eq(3)
+        expect(errors).to be_empty
+      end
+    end
+  end
+
+  describe '#cancel_order!' do
+    let(:product) { create(:product, total_inventory: 10, total_reserved: 2, current_demand_count: 2) }
+    let(:order_item) { build(:order_item, product:, quantity: 2) }
+
+    context 'when the order has been cancelled' do
+      let!(:order) { create(:order, order_status: "cancelled", order_items: [ order_item ]) }
+
+      it 'returns an error' do
+        result, error = order.cancel_order!
+        expect(result).to be_nil
+        expect(error).to eq("Order has been canceled")
+      end
+    end
+
+    context 'when the order is valid' do
+      let!(:order) { create(:order, order_items: [ order_item ]) }
+
+      it 'cancel the order successfully' do
+        result, error = order.cancel_order!
+        expect(error).to be_nil
+        expect(result.order_status).to eq("cancelled")
+        product.reload
+        expect(product.total_inventory).to eq(10)
+        expect(product.total_reserved).to eq(0)
+        expect(product.current_demand_count).to eq(2)
+      end
+    end
+
+    context "when multiple threads cancel the order simultaneously" do
+      let!(:order) { create(:order, order_items: [ order_item ]) }
+
+      it "handles race conditions when many orders update the same product" do
+        threads = []
+        errors = []
+
+        5.times do
+          threads << Thread.new do
+            begin
+              order.cancel_order!
+            rescue => e
+              errors << e.message
+            end
+          end
+        end
+
+        # Wait for 5 threads to complete
+        threads.each(&:join)
+
+        product.reload
+
+        expect(product.total_reserved).to eq(0)
+        expect(product.current_demand_count).to eq(2)
         expect(errors).to be_empty
       end
     end

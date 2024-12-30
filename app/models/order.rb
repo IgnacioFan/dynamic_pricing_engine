@@ -31,6 +31,22 @@ class Order
     store_order(order, totals, caches)
   end
 
+  def cancel_order!
+    return [ nil, "Order has been canceled" ] if order_status == CANCELLED
+
+    errors, caches = process_order_items
+    return [ nil, errors.join(", ") ] if errors.any?
+
+    self.order_status = CANCELLED
+
+    if Product.collection.bulk_write(caches.values).acknowledged? && self.save!
+      Product.trigger_track_product_demand_jobs(caches.keys)
+      [ self, nil ]
+    else
+      [ nil, "Failed to cancel order" ]
+    end
+  end
+
   private
 
   def self.find_cart(cart_id)
@@ -81,6 +97,31 @@ class Order
     end
 
     [ errors, caches, totals ]
+  end
+
+  def process_order_items
+    errors = []
+    caches = {}
+
+    order_items.each do |item|
+      product = item.product
+      if product.available_inventory?(-item.quantity)
+        caches[item.product_id] = {
+          update_one: {
+            filter: { _id: item.product_id },
+            update: {
+              "$set" => {
+                "total_reserved" => product.total_reserved - item.quantity
+              }
+            }
+          }
+        }
+      else
+        errors << "Product #{product.name} (ID: #{item.product_id}) is insufficient"
+      end
+    end
+
+    [ errors, caches ]
   end
 
   def self.store_order(order, totals, caches)
