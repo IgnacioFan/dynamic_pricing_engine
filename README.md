@@ -351,64 +351,36 @@ curl -X POST http://localhost:3000/api/v1/order \
 }
 ```
 
-## How to Set Up Locally
+## Future Enhancements
 
-### Prerequisites
+### Price Configuration
 
-- Ruby version: `ruby-3.2.0` install already
-- Docker installed already
+- Current state: The product model owns fields, such as `inventory_rates`, `inventory_thresholds`, and `demand_rates`.
+- Recommended Improvement: Apply a price_configuration embedded model to encapsulate all pricing logic. This would enable:
+  - Version Control: Tracking changes to inventory and demand parameters over time.
+  - Future Scalability: Easier integration of new pricing factors, such as discounts or seasonal adjustments.
 
-### Setup Steps
-1. Clone the Repository:
-   ```
-   git clone https://github.com/IgnacioFan/dynamic_pricing_engine.git
-   cd dynamic-pricing-engine
-   ```
+### Multiple Currency
 
-2. Set Up Master Key and Credentials
-  - Create a `master.key` file in the config directory.
-  - Enter credentials.yml.enc to view the following credentials, run (`EDITOR="code --wait" rails credentials:edit`).
-  - Note: If you haven't installed Rails under Ruby 3.2.0, you will need to run bundle install first.
-    ```
-    sinatra_pricing_api_key: ""
-    sidekiqweb:
-      username: ""
-      password: ""
-    ```
+- To expand into global markets, we need to support multiple currency and currency conversion.
+- Implementation Suggestions:
+  - Include a currency field in pricing objects.
+  - Integrate currency conversion feature.
 
-3. Build and Run the API server
-   ```
-   docker compose up -d
-   ```
-   This command will set up and run the application along with its dependencies.
+### Add Time Dimension into Dynamic Pricing
 
-4. Access the Application
-  - Check if the API server is running (`localhost:3000/up`)
-  - Open your terminal or [Postman](#api-documentation) to test the APIs.
-  - Enter `localhost:3000/sidekiq`, username and password are in the credentials.yml.enc
+- Current Limitation: Pricing is influenced by inventory and demand without considering time.
+- Recommended Approach: Add a time_factor that adjusts prices. Eg. Time of Day (Surge pricing during peak hours)
 
-### Testing
-1. Run Test Suite:
-   ```
-   make test
-   ```
+### Expand Order States
 
-2. Run individual Test :
-   ```
-   make test path="..."
+- Current State: Limited order states.
+- Proposed Enhancements: Add extra states like **confirmed**, **cancelled**, and **failed**. Benefits:
+  - Improve correctness by distinguishing between user-cancelled orders and system failures.
+  - Support different workflows by identifying order status.
 
-   or
+### API Improvements
 
-   make bash
-   rspec spec/...
-   ```
-
-3. Access the API container environment
-   ```
-   make bash
-   ```
-
-3. Access the Rails console
-   ```
-   make console
-   ```
+- Strengthen API Security with rate limiting to prevent abuse and ensure service availability.
+- Improve system reliability with MongoDB replicas to avoid single point failure.
+- Integrate error tracking (Sentry) and performance analytics (New Relic/Datadog)
