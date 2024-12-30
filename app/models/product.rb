@@ -105,7 +105,7 @@ class Product
   def self.trigger_track_product_demand_jobs(product_ids)
     return if Rails.env.test?
     product_ids.each do |id|
-      TrackProductDemandJob.perform_async(id)
+      TrackProductDemandJob.perform_async(id.to_s)
     end
   end
 

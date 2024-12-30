@@ -106,7 +106,7 @@ class Order
     order_items.each do |item|
       product = item.product
       if product.available_inventory?(-item.quantity)
-        caches[item.product_id] = {
+        caches[product.id.to_s] = {
           update_one: {
             filter: { _id: item.product_id },
             update: {

@@ -38,4 +38,39 @@ RSpec.describe 'Orders API', type: :request do
       end
     end
   end
+
+  describe 'DELETE /api/v1/orders/:id' do
+    let(:product) { build(:product) }
+    let(:order) { build(:order, cart_id: "123", order_status: "cancelled") }
+
+    context 'when the order is cancelled successfully' do
+      before do
+        allow(Order).to receive(:find).and_return(order)
+        allow(order).to receive(:cancel_order!).and_return([ order, nil ])
+      end
+
+      it 'returns status ok (200)' do
+        delete api_v1_order_path(order.id)
+
+        expect(response).to have_http_status(:ok)
+        parsed_response = JSON.parse(response.body, symbolize_names: true)
+        expect(parsed_response[:id]).to eq(order.id.to_s)
+        expect(parsed_response[:status]).to eq("cancelled")
+      end
+    end
+
+    context "when order is not found" do
+      before do
+        allow(Order).to receive(:find).with("123").and_raise(Mongoid::Errors::DocumentNotFound.new(Order, "123"))
+      end
+
+      it "returns a bad request status with a not found message" do
+        delete "/api/v1/orders/123"
+
+        expect(response).to have_http_status(:bad_request)
+        parsed_response = JSON.parse(response.body, symbolize_names: true)
+        expect(parsed_response[:error]).to eq("Order is not found")
+      end
+    end
+  end
 end

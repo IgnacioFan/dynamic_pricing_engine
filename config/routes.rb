@@ -22,7 +22,7 @@ Rails.application.routes.draw do
       resources :products, only: [ :index, :show ] do
         post "import", on: :collection
       end
-      resources :orders, only: [ :create ]
+      resources :orders, only: [ :create, :destroy ]
       resources :carts, only: [ :create ] do
         resources :items, only: [ :create, :destroy ], controller: "cart_items"
       end
