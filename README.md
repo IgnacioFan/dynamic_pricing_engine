@@ -327,6 +327,7 @@ curl -X POST http://localhost:3000/api/v1/order \
 // Status: 201 Created
 {
   "id": "BSON::ObjectId",
+  "status": "pending",
   "cart_id": "BSON::ObjectId",
   "total_quantity": 2,
   "total_price": 220.0,
@@ -346,6 +347,38 @@ curl -X POST http://localhost:3000/api/v1/order \
       "product_category": "Test",
       "quantity": 1,
       "price": 120.0
+    }
+  ]
+}
+```
+
+### `DELETE /api/v1/orders/:id`
+
+Description: Cancel the order.
+
+#### Request
+```bash
+curl -X DELETE http://localhost:3000/api/v1/orders/:id
+```
+
+#### Response
+```json
+// Status: 200 OK
+{
+  "id": "BSON::ObjectId",
+  "status": "cancelled",
+  "cart_id": "BSON::ObjectId",
+  "total_quantity": 20,
+  "total_price": 2000.0,
+  "created_at": "2024-12-24 01:00:00",
+  "updated_at": "2024-12-24 04:00:00",
+  "order_items": [
+    {
+      "product_id": "BSON::ObjectId",
+      "product_name": "Foo",
+      "product_category": "Test",
+      "quantity": 20,
+      "price": 100.0
     }
   ]
 }

@@ -1,4 +1,5 @@
 json.id @order.id
+json.status @order.order_status
 json.cart_id @order.cart_id
 json.total_quantity @order.total_quantity
 json.total_price @order.total_price.to_f
